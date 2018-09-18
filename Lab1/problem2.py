@@ -40,4 +40,5 @@ def time_to_buy_house(cost_of_house, annual_salary, percent_salary_saved):
 
     return message.format(monthly_savings, years, months)
 
+# Test run
 print(time_to_buy_house(100000, 50000, 0.25))
