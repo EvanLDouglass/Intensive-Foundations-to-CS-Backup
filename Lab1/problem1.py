@@ -12,7 +12,7 @@ Evan Douglass
 # places.
 #
 ### Signature
-# amt_owed :: number, number, number => number
+# amt_owed :: (number, number, number) => number
 #
 ### Template
 # amt_owed(given...)

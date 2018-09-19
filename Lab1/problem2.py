@@ -13,7 +13,7 @@ Evan Douglass
 # string.
 #
 ### Signature
-# time_to_buy_house :: number, number, number => string
+# time_to_buy_house :: (number, number, number) => string
 #
 ### Template
 # time_to_buy_house(given...)
