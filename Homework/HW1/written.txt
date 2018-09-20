@@ -1,0 +1,46 @@
+CS5001
+Fall 2018
+HW1: Data Types and Arithmetic Operations
+Evan Douglass
+
+Written #1: What are the types of the following values?
+1A 48.25
+    float
+
+1B 48
+    int
+    
+1C ­1
+    int
+
+1D ­5.0
+    float
+
+1E “hello”
+    string
+
+1F ‘and goodbye!’
+    string
+
+1G ‘15’
+    string
+
+Written #2: What do the following expressions evaluate to?
+2A 7 / 5
+    1.4
+
+2B 7.0 / 5.0
+    1.4
+
+2C 7 // 5
+    1
+
+2D 7 % 5
+    2
+
+Written #3
+In this example, the third print statement doesn't work for two reasons. 
+First, the argument, hello, is not wrapped in quotation marks and is therefore
+not a string. Since it is not a string, the only valid option is that it is a 
+variable. However, the variable hello is not defined anywhere in the script, 
+so the interpreter throws an exception.
