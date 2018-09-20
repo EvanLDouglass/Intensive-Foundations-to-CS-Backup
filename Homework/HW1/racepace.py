@@ -5,8 +5,6 @@
 
 import math
 
-###### Programming #1 ######
-
 '''
 Test Cases #1
 5k race, 0 hours and 26 minutes:
@@ -18,6 +16,8 @@ Test Cases #1
 50k race, 5 hours and 15 minutes:
     31.06 miles, 10:09 pace, 5.92 MPH
 '''
+
+# ========== Function: get_race_stats ==========
 
 #### Purpose
 # To calculate basic statistics about a foot race given information about the 
@@ -45,7 +45,8 @@ Test Cases #1
 #                               Your MPH: 1.00
 #
 def get_race_stats(distance, hours, minutes):
-    '''Calculates basic statistics about a foot race given information about 
+    '''
+    Calculates basic statistics about a foot race given information about 
     the distance and the time it took a runner to finish.
 
     int,float distace -- The distance of a race in kilometers.
@@ -87,6 +88,10 @@ def get_race_stats(distance, hours, minutes):
 # print(get_race_stats(50, 5, 15))
 # print(get_race_stats(1.61, 1, 0))  # Tests singular mile case
 
+# ========== end get_race_stats ==========
+
+
+# ========== Function: get_user_input ==========
 
 #### Purpose
 # Gets user input regarding the length of a race they ran and how long it 
@@ -110,7 +115,8 @@ def get_race_stats(distance, hours, minutes):
 #                     => (40, 3, 36)
 #
 def get_user_input():
-    '''Gets user input regarding the length of a race they ran and how long it 
+    '''
+    Gets user input regarding the length of a race they ran and how long it 
     took them.
 
     No parameters
@@ -126,6 +132,8 @@ def get_user_input():
 ### Test get_user_input ###
 # print(get_user_input())
 # print(get_user_input())
+
+# ========== end get_user_input ==========
 
 
 # Run the program.
