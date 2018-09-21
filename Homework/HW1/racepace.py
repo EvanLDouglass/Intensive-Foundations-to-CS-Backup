@@ -2,23 +2,13 @@
 # Fall 2018
 # HW1: Data Types and Arithmetic Operations
 # Evan Douglass
+#
+# Note: Test cases comment moved to immediately above where the test 
+# cases are called.
 
 import math
 
-'''
-Test Cases #1
-5k race, 0 hours and 26 minutes:
-    3.11 miles, 8:22 pace, 7.17 MPH
-
-10k race, 1 hour and 10 minutes:
-    6.21 miles, 11:16 pace, 5.32 MPH
-
-50k race, 5 hours and 15 minutes:
-    31.06 miles, 10:09 pace, 5.92 MPH
-'''
-
 # ========== Function: get_race_stats ==========
-
 #### Purpose
 # To calculate basic statistics about a foot race given information about the 
 # distance and the time it took a runner to finish.
@@ -82,39 +72,47 @@ def get_race_stats(distance, hours, minutes):
     # Returned without trailing \n for use in print.
     return miles_txt + pace_txt + mph_txt
 
-### Test get_race_stats ###
+'''Test Cases:
+In: 5k race, 0 hours and 26 minutes
+Out: 3.11 miles, 8:22 pace, 7.17 MPH
+
+In: 10k race, 1 hour and 10 minutes
+Out: 6.21 miles, 11:16 pace, 5.32 MPH
+
+In: 50k race, 5 hours and 15 minutes
+Out: 31.06 miles, 10:09 pace, 5.92 MPH
+'''
 # print(get_race_stats(5, 0, 26))
 # print(get_race_stats(10, 1, 10))
 # print(get_race_stats(50, 5, 15))
-# print(get_race_stats(1.61, 1, 0))  # Tests singular mile case
+# print(get_race_stats(1.61, 1, 0))  # Tests singal mile case
 
 # ========== end get_race_stats ==========
 
 
-# ========== Function: get_user_input ==========
-
+# ========== Function: get_input ==========
 #### Purpose
 # Gets user input regarding the length of a race they ran and how long it 
 # took them.
 #
 #### Signature
-# get_user_input :: () => (Number, Number, Number)
+# get_input :: () => (Number, Number, Number)
 #
 #### Template
-# def get_user_input():
+# def get_input():
 #   return returns...
 #
 #### Examples
-# get_user_input() => How many kilometers did you run? 5
+# get_input() => How many kilometers did you run? 5
 #                     How many (full) hours did it take you? 1
 #                     How many minutes? 10
 #                     => (5, 1, 10)
-# get_user_input() => How many kilometers did you run? 40
+# get_input() => How many kilometers did you run? 40
 #                     How many (full) hours did it take you? 3
 #                     How many minutes? 36
 #                     => (40, 3, 36)
 #
-def get_user_input():
+def get_input():
     '''
     Gets user input regarding the length of a race they ran and how long it 
     took them.
@@ -123,20 +121,27 @@ def get_user_input():
     Returns as integers the length of the race in kilometers and the time it 
         took in hours and minutes.
     '''
-    kilometers = int(input("How many kilometers did you run? "))
-    hours = int(input("How many (full) hours did it take you? "))
-    mins = int(input("How many minutes? "))
+    # In case of floats, must convert from str=>float=>int
+    kilometers = int(float(input("How many kilometers did you run? ")))
+    hours = int(float(input("How many (full) hours did it take you? ")))
+    mins = int(float(input("How many minutes? ")))
 
     return (kilometers, hours, mins)
 
-### Test get_user_input ###
-# print(get_user_input())
-# print(get_user_input())
+'''Test Cases:
+In: 5, 0, 55
+Out: (5, 0, 55)
 
-# ========== end get_user_input ==========
+In: 6.8, 1, 23.5
+Out: (6, 1, 23)
+'''
+# print(get_input())
+# print(get_input())
+
+# ========== end get_input ==========
 
 
 # Run the program.
-kilometers, hours, mins = get_user_input()
+kilometers, hours, mins = get_input()
 print()
 print(get_race_stats(kilometers, hours, mins))
