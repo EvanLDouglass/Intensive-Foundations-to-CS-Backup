@@ -55,9 +55,8 @@ def get_race_stats(distance, hours, minutes):
     # Calculate pace and separate into minutes and seconds.
     pace = total_mins / miles
     pace_mins = math.floor(pace)
-    pace_secs = pace % pace_mins * 60
+    pace_secs = (pace % pace_mins) * 60
 
-    # Calculate mph
     mph = miles / total_hours
 
     # Prepare output strings. Kept in separate variables for readability.
