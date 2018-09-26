@@ -1,0 +1,53 @@
+CS5001
+HW2: Written Portion
+Evan Douglass
+
+#1 (Answers under the prompt)
+1A) List the line numbers in the order in which they’re executed, if the user
+types “Tugboat” at the prompt.
+1
+2
+3
+6
+
+1B) List the line numbers in the order in which they’re executed, if the user
+types “Snoopy” at the prompt.
+1
+2
+4
+5
+6
+
+1C) List the line numbers in the order in which they’re executed, if the user
+types “Lassie” at the prompt.
+1
+2
+4
+6
+
+#2
+nickname = dog_name[0:num_letters+1] + "-" + name_suffix
+
+#3
+3A)
+World
+
+3B)
+Hello
+World
+
+3C)
+x = 5
+
+#4
+4A)
+"eeee"
+
+4B)
+"Cheer!"
+
+4C)
+"Cheer Bear"
+
+4D)
+"CHEER BEAR"
