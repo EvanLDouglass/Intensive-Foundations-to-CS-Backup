@@ -31,7 +31,7 @@ def rps():
     print('And in this corner we have a cold, calculating MACHINE.')
     print()
     print('Now...')
-    print('LETS GET READY TO RRUUUUUUUMMMMMMMMMMMBBBLLLLLLLEEEEEEEEEEE!!!!!!!')
+    print('LETS GET READY TO RRRRUUUUUUUMMMMMMMMMMMBBBLLLLLLLLLLEEEEEEEE!!!!!!!')
     print()
 
     ### User input
