@@ -1,5 +1,5 @@
 # CS5001
-# HW1: Palindrome
+# HW2: Palindrome
 # Evan Douglass
 
 '''Test Cases
