@@ -48,9 +48,11 @@ def rps():
         h_choice = 'S'
     
     if h_choice == 'R' or h_choice == 'P' or h_choice == 'S':
-        pass           # Do nothing if valid choice
+        # Do nothing if valid choice
+        pass
     else:
-        h_choice = ''  # Empty string will evaluate to False in later test
+        # Empty string will be False in validity test
+        h_choice = ''
 
     ### Computer selection
     c_choice = random.randint(1, 3)
@@ -62,8 +64,8 @@ def rps():
         c_choice = 'S'
     
     ### Choose winner
-    # Valid user input
     if h_choice:
+        # Valid user input
         print('And the computer chooses...', c_choice + '!!!')
         print()
 
