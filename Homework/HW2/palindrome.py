@@ -77,7 +77,7 @@ def is_pal(string):
         return s_start == s_end_rev
             
 
-# Test is_pal =================================================================
+## Test is_pal =================================================================
 # function_in = ['Radar', ' Radar', ' R a Dar      ', '123edcde321', '!@  5 5  @!',
 #                'Hello', '', 'a', 'Radar!', '  R  ']
 # function_out = [True, True, True, True, True, False, False, False, False, False]
@@ -88,7 +88,7 @@ def is_pal(string):
 #         print('Expected', function_out[index], 'got', test_out)
 #         exit()
 # print('Passed all test cases')
-# End test ====================================================================
+## End test ====================================================================
 
 
 #### Purpose

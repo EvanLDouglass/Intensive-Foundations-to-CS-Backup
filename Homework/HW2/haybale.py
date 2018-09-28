@@ -34,8 +34,7 @@ WEEKENDS = ["sat", "sun"]
 
 #### Purpose
 # Determines the price of admission for a Hay Bale Maze based on factors
-# determined by user input including temperature, day of the week, time of 
-# day, and whether it is raining.
+# including temperature, day of the week, time of day, and whether it is raining.
 #
 #### Signature
 # get_price :: (Integer, String, Integer, Boolean) => Float

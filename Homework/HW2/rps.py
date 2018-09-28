@@ -4,7 +4,6 @@
 
 import random
 
-
 #### Purpose
 # Runs a rock, paper, scissors game played between a user and the computer.
 #
@@ -25,7 +24,7 @@ def rps():
     ### Welcome message
     print('Welcome to RSP Human vs Computer EPIC SHOWDOWN...')
     print('Ladies and gentelmen...')
-    print("It's... TIMMMEEE!!!")
+    print("It's... TIIMMMEEE!!!")
     print()
     print('In this corner we have a human being, warm blooded and full of emotions.')
     print('And in this corner we have a cold, calculating MACHINE.')
@@ -51,7 +50,7 @@ def rps():
         # Do nothing if valid choice
         pass
     else:
-        # Empty string will be False in validity test
+        # Empty string will be False in validity test under 'Choose winner' section
         h_choice = ''
 
     ### Computer selection
