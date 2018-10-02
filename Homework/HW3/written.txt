@@ -1,0 +1,72 @@
+CS5001
+HW 3: Written
+Evan Douglass
+
+#1
+The boolean expression should be:
+    user_in != "Y" and user_in != "N"
+if the user types either "Y" or "N" the expression evaluates to false and the
+invalid input loop is skipped, or stopped. If neither case is entered, then the
+condition is true and the loop starts, or continues.
+
+#2
+2A) Order of line execution:
+1
+2
+3
+5
+2
+3
+4
+6
+
+2B) What does 2A print?
+i is 1
+
+2C) How many times is line 5 executed?
+Twice
+
+2D) What does 2C print?
+i is 4
+
+#3
+The value of the variable sum is 3.
+
+#4
+What is printed to the terminal for each code snippet?
+4A)
+['red', 'green', 'blue']
+
+4B)
+red
+green
+blue
+
+4C)
+0 red
+1 green
+2 blue
+
+#5
+What is printed to the terminal for each code snippet?
+5A)
+0
+1
+2
+3
+4
+5
+
+5B)
+2
+3
+4
+5
+
+5C)
+2
+7
+12
+17
+22
+27
