@@ -94,14 +94,23 @@ def in_reverse(string):
     return reverse
 
 
-print("Testing to_upper:")
-print("test string 9000 =>", to_upper("test string 9000"))
-print("ThIs Is A sTrInG =>", to_upper("ThIs Is A sTrInG"))
-print()
-print("Testing to_lower:")
-print("SHOUTY STRING =>", to_lower("SHOUTY STRING"))
-print("ThIs Is A sTrInG =>", to_lower("ThIs Is A sTrInG"))
-print()
-print("Testing in_reverse:")
-print("Tuesday 3:00 PM =>", in_reverse("Tuesday 3:00 PM"))
-print("abcde =>", in_reverse("abcde"))
+#### Main Program ####
+while True:
+    # Get input
+    string = input("Enter a string to convert:\n")
+    if string == "STOP":
+        print("stopping...")
+        break
+    
+    print("Would you like an uppercase or lowercase palindrome?")
+    choice = input("Enter U for uppercase and L for lowercase: ")
+
+    # Process string and output result
+    if choice == "U":
+        pal = to_upper(string) + to_upper(in_reverse(string))
+        print("Here is your uppercase palindrome:")
+        print(pal)
+    else:  # Choice is L or something else
+        pal = to_lower(string) + to_lower(in_reverse(string))
+        print("Here is your lowercase palindrome:")
+        print(pal)
