@@ -1,2 +1,5 @@
-/Labs/.vscode/
-/Labs/__pycache__/
+.vscode/
+__pycache__/
+.pytest_cache/
+
+*.json
