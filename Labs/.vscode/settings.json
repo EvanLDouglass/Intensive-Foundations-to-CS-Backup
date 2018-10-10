@@ -1,0 +1,8 @@
+{
+    "python.unitTest.pyTestArgs": [
+        "Lab3"
+    ],
+    "python.unitTest.unittestEnabled": false,
+    "python.unitTest.nosetestsEnabled": false,
+    "python.unitTest.pyTestEnabled": true
+}

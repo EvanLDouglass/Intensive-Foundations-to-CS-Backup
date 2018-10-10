@@ -31,6 +31,12 @@ def log2(number):
             count += 1
         return count
 
+#### Tests
+def test_log2():
+    assert(log2(16) == 4)
+    assert(log2(1) == 0)
+    assert(log2(8) == 3)
+
 
 #### Purpose
 # Calculates the log base 2 of a given positive integer that is a power of 2
@@ -58,9 +64,18 @@ def log2_recursive(number):
     else:
         return 1 + log2_recursive(number//2)
 
+#### Tests
+def test_log2_recursive():
+    assert(log2_recursive(16) == 4)
+    assert(log2_recursive(1) == 0)
+    assert(log2_recursive(8) == 3)
 
-value = int(input("Enter a positive power of 2: "))
-result_it = log2(value)
-result_re = log2_recursive(value)
-print("log2(" + str(value) + ") = " + str(result_it))
-print("log2_recursive(" + str(value) + ") = " + str(result_re))
+
+# def main():
+#     value = int(input("Enter a positive power of 2: "))
+#     result_it = log2(value)
+#     result_re = log2_recursive(value)
+#     print("log2(" + str(value) + ") = " + str(result_it))
+#     print("log2_recursive(" + str(value) + ") = " + str(result_re))
+
+# main()
