@@ -1,0 +1,21 @@
+CS5001
+HW 4: Written
+Evan Douglass
+
+#1
+1A) The first value returned by fibonacci(5) is 1.
+    fibonacci(5) => fibonacci(3) => fibonacci(1) => 1
+
+1B) The second value returned is 0.
+    fibonacci(3) returns fibonacci(1) - fibonacci(2) =>
+    1 + fibonacci(0) + fibonacci(1)
+
+1C) The final value returned is 3, not counting the return of fibonacci(5) itself.
+    fibonacci(4) is the final function call and returns 3.
+
+1D) There are 14 recursive calls to fibonacci
+
+#2
+2A) False
+2B) True
+2C) The overall test fails.
