@@ -54,6 +54,7 @@ def decrypt(string, shift):
 
     return output
 
+
 #### Purpose
 # Decrypts a slide transformation on a string.
 #### Signature
