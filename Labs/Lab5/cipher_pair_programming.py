@@ -64,7 +64,6 @@ def decrypt(string, shift):
 # decrypt_slide("ghtni", 3) => "night"
 #
 def decrypt_slide(string, slide):
-    string = string.lower()
     slide = -slide
     return string[-slide:] + string[:-slide]
 
