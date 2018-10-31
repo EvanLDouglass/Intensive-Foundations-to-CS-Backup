@@ -4,7 +4,7 @@
 
 import turtle
 
-colors = ['yellow', 'green', 'blue', 'orange', 'red', 'black', 'purple', 'magenta', 'pink', 'cyan']
+colors = ['yellow', 'green', 'cyan', 'orange', 'red', 'pink']
 mod = len(colors)
 turt = turtle.Turtle()
 
@@ -18,7 +18,7 @@ def loop_draw():
     
     turtle.done()
 
-def recursive_draw(longest_line=400, index=0, increment=10, decrement=10):
+def recursive_draw(longest_line=2000, index=0, increment=10, decrement=10):
     if longest_line == 0:
         turtle.done()
     else:
@@ -30,5 +30,6 @@ def recursive_draw(longest_line=400, index=0, increment=10, decrement=10):
 
 
 # Show graphics
+turt.speed(200)
 #loop_draw()
 recursive_draw()
