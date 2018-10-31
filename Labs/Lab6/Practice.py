@@ -65,4 +65,3 @@ def test_weighted_avg():
     assert(weighted_avg([4, 4, 4], [.25, .25, .5]) == 4.0)
     assert(round(weighted_avg([3, 4, 2, 5, 1], [.1 , .3, .15, .4, .05]), 2) == 3.85)
     assert(weighted_avg([], []) == 0.0)
-    
