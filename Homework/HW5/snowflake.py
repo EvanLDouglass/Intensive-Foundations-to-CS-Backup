@@ -62,14 +62,17 @@ def draw_snowflakes():
     Tests draw_snowflake by drawing several rows of snowflakes of different
     side numbers, side lengths and orders.
     '''
-    # Starting location on canvas
+    # Starting location on canvas.
+    # Determined by guess and check
     x = -300
     y = 280
 
-    # Test orders
+    ## Test orders
+    # Position turtle
     turt.penup()
     turt.goto(x, y)
     turt.pendown()
+    # Draw
     for order in range(4):
         draw_snowflake(3, 100, order)
         turt.penup()
@@ -77,11 +80,13 @@ def draw_snowflakes():
         turt.goto(x, y)
         turt.pendown()
     
-    # Test sides
+    ## Test sides
+    # Position
     turt.penup()
     x, y = (-300, 100)
     turt.goto(x, y)
     turt.pendown()
+    # Draw
     for side in range(1, 5):
         draw_snowflake(side, 100, 3)
         turt.penup()
@@ -89,13 +94,18 @@ def draw_snowflakes():
         turt.goto(x, y)
         turt.pendown()
     
-    # Test side length
+    ## Test side length
+    # More complicated positioning made lists easier to manage than
+    # adjusting arguments as range variables. Sizes goes backwards to make
+    # use of canvas space.
     sizes = [200, 150, 100, 50]
     distances = [250, 200, 150, 100]
+    # Position
     turt.penup()
     x, y = (-350, -100)
     turt.goto(x, y)
     turt.pendown()
+    # Draw
     for index in range(4):
         draw_snowflake(3, sizes[index], 3)
         turt.penup()
