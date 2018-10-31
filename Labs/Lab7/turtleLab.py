@@ -17,17 +17,17 @@ def loop_draw():
     
     turtle.done()
 
-def recursive_draw(longest_line=400, index=0):
+def recursive_draw(longest_line=400, index=0, increment=10, decrement=10):
     if longest_line == 0:
         turtle.done()
     else:
         turt.color(colors[index])
         turt.right(144)
-        turt.forward(longest_line)
-        recursive_draw(longest_line-10, (index+1)%5)
+        turt.forward(increment)
+        recursive_draw(longest_line-decrement, (index+1)%5, increment+10)
         
 
 
 # Show graphics
-loop_draw()
-#recursive_draw()
+#loop_draw()
+recursive_draw()
