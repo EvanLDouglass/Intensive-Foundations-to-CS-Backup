@@ -1,0 +1,106 @@
+CS5001
+HW 6: Othello Design
+Evan Douglass
+
+========== MAIN DATA STRUCTURES ==========
+
+
+
+========== /MAIN DATA STRUCTURES ==========
+
+========== CLASSES ==========
+
+Name: GameBoard
+Purpose: GameBoard represents a board of the game Othello. It also contains all the functions to execute game logic.
+Constants:
+    * int SQUARE -- The size of one square on the board.
+Variables: 
+    * Screen window -- The window that contains the game.
+    * Turtle othello -- Used for drawing the board.
+    * GamePeice[] board -- A list of the contents of each square on the board, either None for empty squares or a GamePeice object.
+    * str turn -- Contains the values "white" or "black" depending on whos turn it is. Initializes to black; the user will go first.
+Methods:
+    draw_board(self, n)
+        Draws an nxn board with a green background.
+        int n -- The number of squares on one side of the board. 
+    
+    draw_lines(self, turt, n)
+        Draws n vertical lines on an othello board. A helper function for draw_board.
+        Turtle turt -- A Turtle object.
+        int n -- The number of squares to draw on the board in one direction.
+
+    place(self, location, color)
+        Initializes a GamePeice object on the Othello board at the given location and with the given color.
+        int location -- An index representing a square on the board (0 to n*n).
+        str color -- The color of the peice being placed.
+
+        Initialize a GamePeice object with location and color
+        Add to self.board in location
+        Draw peice on the board with GamePeice.draw_peice
+        (Use in onclick Screen method?)
+
+    get_location(self, mouse_x, mouse_y)
+        Gets the board square location based on the coordinates of mouse click.
+        int mouse_x -- x coordinate of the mouse
+        int mouse_y -- y coordinate of the mouse
+        Returns an int representing the board square that was clicked in, or null if the click was outside the board area.
+
+    is_valid_move(self)
+
+    count_tiles(self)
+
+    flip_tiles(self, location_list)
+
+==========
+
+Name: GamePeice
+Purpose: GamePeice represents a single playing peice in Othello.
+Constants:
+    * 
+Variables:
+    * str color -- Which color is currently showing on the board. Can be white or black.
+    * int location -- An index representing a square on the Othello board (0 to n*n).
+Methods:
+    flip(self)
+        If the peice is white, changes it to black. If the peice is black, changes it to white.
+        
+        Change the color attribute
+        Redraw the peice
+    
+    draw_peice(self, turt, location, color)
+        Draws an Othello peice on the game board using the provided Turtle object.
+        Turtle turt -- A Turtle object to draw on the board.
+        int location -- An index representing a square on the board (0 to n*n).
+        str color -- The color of the peice being placed.
+
+========== /CLASSES ==========
+
+========== Main ==========
+
+* Initialize the game board and set turn to be the user's (board = GameBoard(8))
+* search for all valid moves
+* while the board is not full and there are valid moves
+    * if it's the user's turn
+        * wait for click
+            * if click is on the board and in a valid location
+                * place a black tile in that square
+                * flip all white tiles between the new tile and any other black tiles
+                * change turns
+    * elif it's the computer's turn
+        * for each valid move
+            * find the largest number of tiles that can be flipped from there
+        * place a white tile in the location that will flip the largest number of tiles
+        * flip the tiles
+        * change turns
+    * else
+        * do nothing if it's the user's turn and there is not a valid click
+    * search for all valid moves
+* count the number of black and white tiles on the board
+* if there are more black tiles
+    * user wins, display "you win" message
+* else
+    * computer wins, display "you lose" message
+
+* turtle.done()             
+
+========== /Main ==========
