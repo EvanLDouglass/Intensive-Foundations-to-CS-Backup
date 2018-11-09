@@ -22,12 +22,21 @@ Variables:
 Methods:
     draw_board(self, n)
         Draws an nxn board with a green background.
-        int n -- The number of squares on one side of the board. 
+        int n -- The number of squares on one side of the board.
+
+        Set up Screen
+        Set up Turtle
+        Set black lines and green background
+        Set turtle in lower left corner
+        Draw background
+        Draw lines
     
     draw_lines(self, turt, n)
         Draws n vertical lines on an othello board. A helper function for draw_board.
         Turtle turt -- A Turtle object.
         int n -- The number of squares to draw on the board in one direction.
+
+    draw_start_tiles(self, turt)
 
     place(self, location, color)
         Initializes a GamePeice object on the Othello board at the given location and with the given color.
@@ -36,7 +45,7 @@ Methods:
 
         Initialize a GamePeice object with location and color
         Add to self.board in location
-        Draw peice on the board with GamePeice.draw_peice
+        Draw peice on the board with GamePeice.draw_tile
         (Use in onclick Screen method?)
 
     get_location(self, mouse_x, mouse_y)
@@ -60,18 +69,31 @@ Constants:
 Variables:
     * str color -- Which color is currently showing on the board. Can be white or black.
     * int location -- An index representing a square on the Othello board (0 to n*n).
+    * int radius -- The radius of each tile. Calculated from SQUARE in GameBoard.
 Methods:
+    calc_radius(self, square_size)
+        int square_size -- The size of a single square on the game board.
+        Returns the radius of a tile as an int.
+
+        return square_size/2 - 10
+
     flip(self)
         If the peice is white, changes it to black. If the peice is black, changes it to white.
+        Nothing returned
         
-        Change the color attribute
-        Redraw the peice
+        if self.color is white 
+            self.color = black
+        elif self.color is black
+            self.color = white
+        Redraw the tile with its new color (draw_tile)
     
-    draw_peice(self, turt, location, color)
+    draw_tile(self, turt, color, x, y)
         Draws an Othello peice on the game board using the provided Turtle object.
         Turtle turt -- A Turtle object to draw on the board.
-        int location -- An index representing a square on the board (0 to n*n).
         str color -- The color of the peice being placed.
+        int x -- The x coordinate of the center of the tile
+        int y -- The y coordinate of the center of the tile
+        Nothing returned
 
 ========== /CLASSES ==========
 
@@ -100,7 +122,6 @@ Methods:
     * user wins, display "you win" message
 * else
     * computer wins, display "you lose" message
-
 * turtle.done()             
 
 ========== /Main ==========
