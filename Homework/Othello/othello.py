@@ -36,6 +36,9 @@ class GameBoard:
         # Draw the starting tiles
         self.draw_start_tiles()
 
+        # Set up mouse click event listener
+        window.onclick(self.play)
+
     ## SIGNATURE
     # draw_board :: Integer => Void
     def draw_board(self):
@@ -102,15 +105,27 @@ class GameBoard:
         color = "white"
         # locations of lower squares are switched here to get colors right
         for location in (ur, ul, ll, lr):
-            x, y = self.squares[location].calc_center()
-            piece = GamePiece(location, color, x, y)
-            self.pieces[location] = piece
-            piece.draw_tile()
+            self.place(location, color)
 
             if color == "white":
                 color = "black"
             else:
                 color = "white"
+    
+    ## SIGNATURE
+    # place :: (Object, Integer, String, Integer, Integer) => Void
+    def place(self, location, color):
+        '''
+        Initializes a Gamepiece object on the Othello board at the given 
+        location and with the given color.
+        int location -- An index representing a square on the board (0 to n*n).
+        str color -- The color of the piece being placed.
+        '''
+        # Get center of square
+        x, y = self.squares[location].calc_center()
+        piece = GamePiece(location, color, x, y)
+        self.pieces[location] = piece
+        piece.draw_tile()
 
     ## SIGNATURE
     # init_squares :: (Object, Integer) => Object
@@ -160,32 +175,55 @@ class GameBoard:
         return (ur, ul, lr, ll)
 
     ## SIGNATURE
-    # place :: (Object, Integer, String, Integer, Integer) => Void
-    def place(self, location, color, x, y):
+    # is_full :: Object => Boolean
+    def is_full(self):
         '''
-        Initializes a Gamepiece object on the Othello board at the given 
-        location and with the given color.
+        Tests whether the board is full of tiles or not.
+        Returns a boolean value.
+        '''
+        full = True
+        for tile in self.pieces:
+            # if a tile == None, the board is not full
+            if not tile:
+                full = False
+                break
+        return full
 
-        int location -- An index representing a square on the board (0 to n*n).
-        str color -- The color of the piece being placed.
-        int x -- The x-coordinate of the Gamepiece center.
-        int y -- The y-coordinate o the Gamepiece center.
+    ## SIGNATURE
+    # play :: (Object, Integer, Integer) => Void
+    def play(self, x, y):
         '''
-        # Get center of square
-        x, y = self.squares[location].calc_center()
-        # Initialize a Gamepiece object with location and color
-        piece = GamePiece(location, color, x, y)
-        # Add to self.pieces in location
-        self.pieces[location] = piece
-        # Draw piece on the board with Gamepiece.draw_tile
-        piece.draw_tile()
+        This mehtod drives the game. It waits for a mouse click to occur and 
+        if the click is in a valid location it places a tile of color 
+        self.turn in that square. If the board is full, it announces a winner 
+        and terminates, thus stopping the game.
+        int x -- The mouse x position
+        int y -- The mouse y position 
+        '''
+        # TODO: Search for legal moves
+        for square in self.squares:
+            if square.was_clicked(x, y) and square.is_empty(self.pieces):
+
+                self.place(square.location, self.turn)
+
+                # Switch turns
+                if self.turn == "white":
+                    self.turn = "black"
+                else:  # turn == black
+                    self.turn = "white"
+                break
+        
+        # When the board is full, announce a winner and finish the game
+        if self.is_full():
+            # TODO: Count tiles of each color and announce winner
+            pass
 
 
 class Square:
     '''Represents a square on the Othello board.'''
 
-    def __init__(self, index, x, y):
-        self.index = index
+    def __init__(self, location, x, y):
+        self.location = location
         self.x = x
         self.y = y
         self.size = SQUARE
@@ -214,11 +252,23 @@ class Square:
         Returns a boolean value.
         '''
         inside = False
-        if (self.x <= x <= self.x + self.size) \
-                and (self.y <= y <= self.y + self.size):
+        if (self.x < x < self.x + self.size) \
+                and (self.y < y < self.y + self.size):
             inside = True
 
         return inside
+
+    ## SIGNATURE
+    # is_empty :: Object => Boolean
+    def is_empty(self, state):
+        '''
+        Tests if the square contains a tile
+        GamePiece[] state -- A list of GamePiece objects representing the 
+        current board layout.
+        '''
+        if state[self.location] == None:
+            return True
+        return False
         
 class GamePiece:
     '''GamePiece represents a single playing piece in Othello.'''
@@ -261,5 +311,5 @@ class GamePiece:
 #### Game play ####
 if __name__ == "__main__":
     board = GameBoard(4)
-    
+
     turtle.done()
