@@ -4,21 +4,43 @@ Evan Douglass
 
 ========== MAIN DATA STRUCTURES ==========
 
+In the GameBoard class there will be a list used to represent the current state 
+of the Othello board. It will contain the values None or a Gamepiece object 
+depending on whether the square contains a tile or not. The list will have a 
+length of n*n, where n is the number of squares on one side of the board. Each 
+index represents one square on the board, from 0 on the bottom left to n*n on 
+the upper right, increasing left to right, bottom to top.
 
+There will be another list in GameBoard containing Square objects. This is 
+initialized when the game board is drawn and is used to determine if one of 
+the squares was clicked on, so a tile can be drawn there.
 
 ========== /MAIN DATA STRUCTURES ==========
+
+========== MODULE CONSTANTS AND GLOBAL VARIABLES ==========
+
+* int SQUARE -- The size of one square on the board.
+* int RADIUS -- The radius of each tile.
+* Screen window -- The window that contains the game.
+* Turtle othello -- Used for drawing in the window.
+
+========== /MODULE CONSTANTS ==========
 
 ========== CLASSES ==========
 
 Name: GameBoard
-Purpose: GameBoard represents a board of the game Othello. It also contains all the functions to execute game logic.
+Purpose:
+    GameBoard represents a board of the game Othello. It also contains all the functions to execute game logic.
+
 Constants:
-    * int SQUARE -- The size of one square on the board.
+    *
+
 Variables: 
-    * Screen window -- The window that contains the game.
-    * Turtle othello -- Used for drawing the board.
-    * GamePeice[] board -- A list of the contents of each square on the board, either None for empty squares or a GamePeice object.
+    * int size -- The length of one side of the board.
     * str turn -- Contains the values "white" or "black" depending on whos turn it is. Initializes to black; the user will go first.
+    * Gamepiece[] pieces -- A list of the contents of each square on the board. Either a Gampiece object or None for empty squares.
+    * Square[] squares -- A list of each square on the board.
+
 Methods:
     draw_board(self, n)
         Draws an nxn board with a green background.
@@ -32,27 +54,46 @@ Methods:
         Draw lines
     
     draw_lines(self, turt, n)
-        Draws n vertical lines on an othello board. A helper function for draw_board.
+        Draws a line the length of the board. A helper function for draw_board.
         Turtle turt -- A Turtle object.
         int n -- The number of squares to draw on the board in one direction.
 
-    draw_start_tiles(self, turt)
+        Draw a line the length of n squares
+
+    find_center_squares(self, n)
+        Finds the four center starting squares on the board.
+        int n -- The number of squares on one side of the board. Must be even.
+        Returns a tuple of ints representing the indexes of the four center squares on the draw_board.
+
+        # If n is even and the board grid is indexed from 0 to n*n
+        # then the upper right center square can be found with the formula:
+        # 0.5(n**2 + n)
+        # I worked this out on paper myself.
+        # The remaining squares can be found by subtracting from that result:
+        # 1, n, n+1 for upper left, lower right, and lower left respectively
+        ur = 0.5(n**2 + n)
+        ul = ur - 1
+        lr = ur - n
+        ll = lr - 1
+        return (ur, ul, lr, ll)
 
     place(self, location, color)
-        Initializes a GamePeice object on the Othello board at the given location and with the given color.
+        Initializes a Gamepiece object on the Othello board at the given location and with the given color.
         int location -- An index representing a square on the board (0 to n*n).
-        str color -- The color of the peice being placed.
+        str color -- The color of the piece being placed.
 
-        Initialize a GamePeice object with location and color
+        Initialize a Gamepiece object with location and color
         Add to self.board in location
-        Draw peice on the board with GamePeice.draw_tile
+        Draw piece on the board with Gamepiece.draw_tile
         (Use in onclick Screen method?)
 
     get_location(self, mouse_x, mouse_y)
-        Gets the board square location based on the coordinates of mouse click.
+        Gets board square location data based on the coordinates of a mouse click.
         int mouse_x -- x coordinate of the mouse
         int mouse_y -- y coordinate of the mouse
-        Returns an int representing the board square that was clicked in, or null if the click was outside the board area.
+        Returns an int[] where index 0 represents the board square that was clicked in and indices 1 & 2 are the x and y-coordinates of the square's center. Does nothing if the click is outside of the board area.
+
+        Increase x and y to account for board vs screen size
 
     is_valid_move(self)
 
@@ -62,23 +103,58 @@ Methods:
 
 ==========
 
-Name: GamePeice
-Purpose: GamePeice represents a single playing peice in Othello.
+Name: Square
+Purpose:
+    Square represents the area of one square on the Othello board.
+Constants:
+    * 
+
+Variables:
+    * int index -- A unique integer identifying the square.
+    * int size -- The legth of one side of the square.
+    * int x -- The lower left x-coordinate of the square.
+    * int y -- The lower left y-coordinate of the square.
+    * int[] center -- The (x, y) coordinates of the square's center.
+
+Methods:
+    __init__(self, index, x, y)
+        assign variables
+        calculate center
+
+    calc_center(self)
+        Finds the coordinates of the square's center.
+        Returns a tuple containing the coordinates.
+
+        center x is (x+length) - length//2
+        center y is (y+length) - length//2
+        return (x, y)
+
+    was_clicked(self, x, y)
+        Determines if this square was clicked on by the user.
+        int x -- The x-coordinate of a mouse click.
+        int y -- The y-coordinate of a mouse click.
+        Returns a boolean value.
+
+        if self.x <= x <= self.x + size
+        and self.y <= y <= self.y + size
+           then return True
+        else return False
+
+==========
+
+Name: Gamepiece
+Purpose:
+    Gamepiece represents a single playing piece in Othello.
 Constants:
     * 
 Variables:
-    * str color -- Which color is currently showing on the board. Can be white or black.
+    * str color -- The color that is currently showing on the board. Can be white or black.
     * int location -- An index representing a square on the Othello board (0 to n*n).
-    * int radius -- The radius of each tile. Calculated from SQUARE in GameBoard.
 Methods:
-    calc_radius(self, square_size)
-        int square_size -- The size of a single square on the game board.
-        Returns the radius of a tile as an int.
-
-        return square_size/2 - 10
+    __init__(self, location, color)
 
     flip(self)
-        If the peice is white, changes it to black. If the peice is black, changes it to white.
+        If the piece is white, changes it to black. If the piece is black, changes it to white.
         Nothing returned
         
         if self.color is white 
@@ -88,12 +164,18 @@ Methods:
         Redraw the tile with its new color (draw_tile)
     
     draw_tile(self, turt, color, x, y)
-        Draws an Othello peice on the game board using the provided Turtle object.
+        Draws an Othello piece on the game board using the provided Turtle object.
         Turtle turt -- A Turtle object to draw on the board.
-        str color -- The color of the peice being placed.
+        str color -- The color of the piece being placed.
         int x -- The x coordinate of the center of the tile
         int y -- The y coordinate of the center of the tile
         Nothing returned
+
+        Raise turt
+        Move turt to center_x, center_y
+        Lower turt
+        Set fill color to color
+        turt.circle(radius)
 
 ========== /CLASSES ==========
 
