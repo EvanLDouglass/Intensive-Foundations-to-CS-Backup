@@ -201,9 +201,11 @@ class GameBoard:
         int y -- The mouse y position 
         '''
         # TODO: Search for legal moves
+
         for square in self.squares:
             if square.was_clicked(x, y) and square.is_empty(self.pieces):
-
+                
+                # Draw a tile
                 self.place(square.location, self.turn)
 
                 # Switch turns
@@ -216,7 +218,94 @@ class GameBoard:
         # When the board is full, announce a winner and finish the game
         if self.is_full():
             # TODO: Count tiles of each color and announce winner
-            pass
+            winner, white, black = self.find_winner()
+            self.announce_winner(winner, white, black)
+
+    ## SIGNATURE
+    # find_winner :: (Object, Object[]) => (String, Integer, Integer)
+    def find_winner(self):
+        '''
+        Determines the winner of the game based on who has the most tiles 
+        on the board.
+        Returns a string describing the winner. Either black, white, or tie.
+        '''
+        white = 0
+        black = 0
+        for tile in self.pieces:
+            if tile.color == "white":
+                white += 1
+            elif tile.color == "black":
+                black += 1
+        
+        if white > black:
+            winner = "white"
+        elif black > white:
+            winner = "black"
+        else:
+            winner = "tie"
+        
+        return winner, white, black
+    
+    ## SIGNATURE
+    # announce_winner :: (Object, String) => Void
+    def announce_winner(self, winner, white, black):
+        '''
+        Announces the winner on top of the board.
+        str winner -- The winner of the game. Either white or black.
+        int white -- The number of white tiles.
+        int black -- The number of black tiles.
+        '''
+        # Determine message to display
+        if winner == "tie":
+            message = "You tied!"
+        else:
+            message = winner + "wins!"
+        
+        score = "black: " + str(black) + ", white: " + str(white)
+        
+        # Display textbox
+        self.draw_box()
+        
+        # Display message
+        othello.penup()
+        othello.home()
+        othello.color("white")
+        othello.pendown()
+        othello.write(message, align="center", font=("Georgia", 25, "bold", "underline"))
+
+        # Display score
+        othello.penup()
+        othello.goto(0, -SQUARE//2)
+        othello.pendown()
+        othello.write(score, align="center", font=("Georgia", 16, "bold"))
+
+    ## SIGNATURE
+    # draw_box :: Object => Void
+    def draw_box(self):
+        '''
+        Draws a black box used to display the end-of-game text.
+        '''
+        # Box will cover the middle two rows across the whole window
+        start_x = -self.size//2 - SQUARE//2
+        start_y = -SQUARE
+        width = self.size + SQUARE
+        height = 2 * SQUARE
+
+        # Set start
+        othello.penup()
+        othello.goto(start_x, start_y)
+        othello.setheading(0)
+        othello.pendown()
+
+        # Draw
+        othello.color("white", "#202020")
+        othello.begin_fill()
+        for half in range(2):
+            othello.forward(width)
+            othello.left(90)
+            othello.forward(height)
+            othello.left(90)
+        othello.end_fill()
 
 
 class Square:
@@ -311,5 +400,4 @@ class GamePiece:
 #### Game play ####
 if __name__ == "__main__":
     board = GameBoard(4)
-
     turtle.done()
