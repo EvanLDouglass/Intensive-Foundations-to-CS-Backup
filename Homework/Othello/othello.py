@@ -8,8 +8,8 @@ Author: Evan Douglass
 import turtle
 
 #### Module constants and global variables ####
-SQUARE = 50     # pixels
-RADIUS = 40     # pixels
+SQUARE = 50             # pixels
+RADIUS = SQUARE - 10    # pixels
 
 window = turtle.Screen()
 othello = turtle.Turtle()
@@ -17,18 +17,27 @@ othello = turtle.Turtle()
 
 #### Classes ####
 class GameBoard:
-    '''The GameBoard class contains the functionality of a board for the game Othello.'''
+    '''
+    The GameBoard class represents a board for the game Othello. It also 
+    contains the functionality and logic allowing for gameplay.
+    '''
 
     def __init__(self, n):
-        # The user will go first and is assigned the black pieces
+        '''
+        Draws the starting board and sets up gameplay.
+        int n -- The number of squares on one side of the board (it's length
+        in squares).
+        '''
         self.n = n
-        self.turn = "black"
         self.size = SQUARE * n
-        self.pieces = [None for location in range(n*n)]
+        self.turn = "black"         # The user will go first and is assigned the black pieces
 
-        # Set up list to track clicked squares
-        start = -n * SQUARE / 2
-        self.squares = self.init_squares(n, start)
+        # Game state tracking attributes
+        self.pieces = [None for location in range(n*n)]
+        self.black = 0
+        self.white = 0
+        start = -n * SQUARE / 2     # The x & y coordinate of the first square
+        self.squares = self.init_squares(start)
 
         # Draw the empty board
         self.draw_board()
@@ -40,10 +49,38 @@ class GameBoard:
         window.onclick(self.play)
 
     ## SIGNATURE
-    # draw_board :: Integer => Void
-    def draw_board(self):
-        '''Draws an nxn board with a green background.'''
+    # init_squares :: (Object, Integer) => Object
+    def init_squares(self, corner):
+        '''
+        Populates the self.squares list.
+        int corner -- A number representing the x & y coordinate of the 
+        first square.
+        Returns a list of Square objects
+        '''
+        corner = int(corner)
+        lst = []
+        index = 0
+        # y-coordinates can continuously increase
+        y_corner = corner
+        for row in range(self.n):
+            # x-coordinate values need to start over on each row
+            x_corner = corner
+            for column in range(self.n):
+                # Add a square to the tracker list and increment values
+                lst.append(Square(index, x_corner, y_corner))
+                index += 1
+                x_corner += SQUARE
+            y_corner += SQUARE
+        
+        return lst
 
+    ## SIGNATURE
+    # draw_board :: Object => Void
+    def draw_board(self):
+        '''
+        Draws an nxn board with a green background.
+        '''
+        # Ensure n is a valid number
         if self.n % 2 == 1 or self.n < 4:
             raise ValueError("n must be even and at least 4")
 
@@ -85,11 +122,10 @@ class GameBoard:
             self.draw_lines()
 
     ## SIGNATURE
-    # draw_lines :: (Object, Integer) => Void
+    # draw_lines :: Object => Void
     def draw_lines(self):
         '''
-        Draws a line on an othello board. A helper function for draw_board.
-        Turtle turt -- A Turtle object.
+        Draws a line. this is a helper function for draw_board.
         '''
         othello.pendown()
         othello.forward(SQUARE * self.n)
@@ -99,11 +135,12 @@ class GameBoard:
     # draw_start_tiles :: Object => Void
     def draw_start_tiles(self):
         '''
-        Draws the four starting tiles on the board
+        Draws the four starting tiles on the board.
         '''
-        ur, ul, lr, ll = self.find_center_squares(self.n)
+        # ur == upper right, ll == lower left, etc.
+        ur, ul, lr, ll = self.find_center_squares()
         color = "white"
-        # locations of lower squares are switched here to get colors right
+        # The order of the lower squares are switched here to get colors right
         for location in (ur, ul, ll, lr):
             self.place(location, color)
 
@@ -113,7 +150,54 @@ class GameBoard:
                 color = "white"
     
     ## SIGNATURE
-    # place :: (Object, Integer, String, Integer, Integer) => Void
+    # draw_box :: Object => Void
+    def draw_box(self):
+        '''
+        Draws a black box used to display the end-of-game text.
+        '''
+        # Box will cover the middle two rows across the whole window
+        start_x = -self.size//2 - SQUARE//2
+        start_y = -SQUARE
+        width = self.size + SQUARE
+        height = 2 * SQUARE
+
+        # Set start
+        othello.penup()
+        othello.goto(start_x, start_y)
+        othello.setheading(0)
+        othello.pendown()
+
+        # Draw
+        othello.color("white", "#202020")
+        othello.begin_fill()
+        for half in range(2):
+            othello.forward(width)
+            othello.left(90)
+            othello.forward(height)
+            othello.left(90)
+        othello.end_fill()
+
+    ## SIGNATURE
+    # find_center_squares :: Object => Integer[]
+    def find_center_squares(self):
+        '''
+        Finds the four center starting squares on the board.
+        Returns a tuple of ints representing the indexes of the four center 
+        squares on the draw_board.
+        '''
+        # If n is even and the board grid is indexed from 0 to n*n
+        # then the upper right center square can be found with the formula:
+        # 0.5(n**2 + n)
+        # The remaining squares can be found by subtracting from that result
+        # 1, n, n+1 for upper left, lower right, and lower left respectively
+        ur = int(0.5 * (self.n**2 + self.n))
+        ul = ur - 1
+        lr = ur - self.n
+        ll = lr - 1
+        return (ur, ul, lr, ll)
+    
+    ## SIGNATURE
+    # place :: (Object, Integer, String) => Void
     def place(self, location, color):
         '''
         Initializes a Gamepiece object on the Othello board at the given 
@@ -123,56 +207,17 @@ class GameBoard:
         '''
         # Get center of square
         x, y = self.squares[location].calc_center()
+
+        # Draw a new tile
         piece = GamePiece(location, color, x, y)
-        self.pieces[location] = piece
         piece.draw_tile()
 
-    ## SIGNATURE
-    # init_squares :: (Object, Integer) => Object
-    def init_squares(self, n, corner):
-        '''
-        Populates the self.squares list.
-        int n -- The number of squares on one side of the board.
-        int corner -- A number representing the x & y coordinate of the 
-        first square.
-        Returns a list of Square objects
-        '''
-        corner = int(corner)
-        lst = []
-        index = 0
-        # y-coordinates can continuously increase
-        y_corner = corner
-        for row in range(n):
-            # x-coordinate values need to start over on each row
-            x_corner = corner
-            for column in range(n):
-                lst.append(Square(index, x_corner, y_corner))
-                index += 1
-                x_corner += SQUARE
-            y_corner += SQUARE
-        
-        return lst
-
-    ## SIGNATURE
-    # find_center_squares :: (Object, Integer) => Integer[]
-    def find_center_squares(self, n):
-        '''
-        Finds the four center starting squares on the board.
-        int n -- The number of squares on one side of the board. Must be even.
-        Returns a tuple of ints representing the indexes of the four center 
-        squares on the draw_board.
-        '''
-        # If n is even and the board grid is indexed from 0 to n*n
-        # then the upper right center square can be found with the formula:
-        # 0.5(n**2 + n)
-        # I worked this out on paper myself.
-        # The remaining squares can be found by subtracting from that result:
-        # 1, n, n+1 for upper left, lower right, and lower left respectively
-        ur = int(0.5 * (n**2 + n))
-        ul = ur - 1
-        lr = ur - n
-        ll = lr - 1
-        return (ur, ul, lr, ll)
+        # Track the new tile
+        self.pieces[location] = piece
+        if color == "white":
+            self.white += 1
+        elif color == "black":
+            self.black += 1
 
     ## SIGNATURE
     # is_full :: Object => Boolean
@@ -183,11 +228,45 @@ class GameBoard:
         '''
         full = True
         for tile in self.pieces:
-            # if a tile == None, the board is not full
+            # if any tile == None, the board is not full
             if not tile:
                 full = False
                 break
         return full
+    
+    ## SIGNATURE
+    # announce_winner :: Object => Void
+    def announce_winner(self):
+        '''
+        Determines and announces the winner of the current game.
+        '''
+        # Determine message to display
+        if self.white > self.black:
+            message = "White wins!"
+        elif self.black > self.white:
+            message = "black wins!"
+        else:
+            message = "You tied!"
+        
+        score = "black: " + str(self.black) + ", white: " + str(self.white)
+        
+        # Display textbox
+        self.draw_box()
+        
+        # Display message
+        othello.penup()
+        othello.home()
+        othello.color("white")
+        othello.pendown()
+        othello.write(message, align="center", font=("Georgia", 25, "bold", "underline"))
+        print(message)
+
+        # Display score
+        othello.penup()
+        othello.goto(0, -SQUARE//2)
+        othello.pendown()
+        othello.write(score, align="center", font=("Georgia", 16, "bold"))
+        print(score)
 
     ## SIGNATURE
     # play :: (Object, Integer, Integer) => Void
@@ -217,101 +296,24 @@ class GameBoard:
         
         # When the board is full, announce a winner and finish the game
         if self.is_full():
-            # TODO: Count tiles of each color and announce winner
-            winner, white, black = self.find_winner()
-            self.announce_winner(winner, white, black)
+            self.announce_winner()
 
-    ## SIGNATURE
-    # find_winner :: (Object, Object[]) => (String, Integer, Integer)
-    def find_winner(self):
-        '''
-        Determines the winner of the game based on who has the most tiles 
-        on the board.
-        Returns a string describing the winner. Either black, white, or tie.
-        '''
-        white = 0
-        black = 0
-        for tile in self.pieces:
-            if tile.color == "white":
-                white += 1
-            elif tile.color == "black":
-                black += 1
-        
-        if white > black:
-            winner = "white"
-        elif black > white:
-            winner = "black"
-        else:
-            winner = "tie"
-        
-        return winner, white, black
-    
-    ## SIGNATURE
-    # announce_winner :: (Object, String) => Void
-    def announce_winner(self, winner, white, black):
-        '''
-        Announces the winner on top of the board.
-        str winner -- The winner of the game. Either white or black.
-        int white -- The number of white tiles.
-        int black -- The number of black tiles.
-        '''
-        # Determine message to display
-        if winner == "tie":
-            message = "You tied!"
-        else:
-            message = winner + "wins!"
-        
-        score = "black: " + str(black) + ", white: " + str(white)
-        
-        # Display textbox
-        self.draw_box()
-        
-        # Display message
-        othello.penup()
-        othello.home()
-        othello.color("white")
-        othello.pendown()
-        othello.write(message, align="center", font=("Georgia", 25, "bold", "underline"))
-
-        # Display score
-        othello.penup()
-        othello.goto(0, -SQUARE//2)
-        othello.pendown()
-        othello.write(score, align="center", font=("Georgia", 16, "bold"))
-
-    ## SIGNATURE
-    # draw_box :: Object => Void
-    def draw_box(self):
-        '''
-        Draws a black box used to display the end-of-game text.
-        '''
-        # Box will cover the middle two rows across the whole window
-        start_x = -self.size//2 - SQUARE//2
-        start_y = -SQUARE
-        width = self.size + SQUARE
-        height = 2 * SQUARE
-
-        # Set start
-        othello.penup()
-        othello.goto(start_x, start_y)
-        othello.setheading(0)
-        othello.pendown()
-
-        # Draw
-        othello.color("white", "#202020")
-        othello.begin_fill()
-        for half in range(2):
-            othello.forward(width)
-            othello.left(90)
-            othello.forward(height)
-            othello.left(90)
-        othello.end_fill()
 
 
 class Square:
-    '''Represents a square on the Othello board.'''
+    '''
+    Represents a single square on the Othello board.
+    '''
 
     def __init__(self, location, x, y):
+        '''
+        int location -- An index representing the assigned number on the board
+        of this square.
+        int x -- The lower left x-coordinate of the square.
+        int y -- The lower left y-coordinate of the square.
+        Attributes representing the length of a side (size) and the center
+        coordinates (center) of the square are also initialized.
+        '''
         self.location = location
         self.x = x
         self.y = y
@@ -341,8 +343,8 @@ class Square:
         Returns a boolean value.
         '''
         inside = False
-        if (self.x < x < self.x + self.size) \
-                and (self.y < y < self.y + self.size):
+        if ((self.x < x < self.x + self.size)
+                and (self.y < y < self.y + self.size)):
             inside = True
 
         return inside
@@ -354,15 +356,27 @@ class Square:
         Tests if the square contains a tile
         GamePiece[] state -- A list of GamePiece objects representing the 
         current board layout.
+        Returns a boolean value.
         '''
         if state[self.location] == None:
             return True
         return False
-        
+
+
+
 class GamePiece:
-    '''GamePiece represents a single playing piece in Othello.'''
+    '''
+    GamePiece represents a single piece, or tile, in Othello.
+    '''
 
     def __init__(self, location, color, center_x, center_y):
+        '''
+        int location -- An index cooresponding to the square that this piece
+        is placed in.
+        str color -- The color of the piece. Either white or black.
+        int center_x -- The x-coordinate of the piece's center.
+        int center_y -- The y-coordinate of the piece's center.
+        '''
         self.location = location
         self.color = color
         self.x = center_x
@@ -374,7 +388,6 @@ class GamePiece:
         '''
         Draws an Othello piece on the game board using the global Turtle object.
         str color -- The color of the piece being placed.
-        Nothing returned
         '''
         othello.penup()
         othello.goto(self.x, self.y)
@@ -383,11 +396,11 @@ class GamePiece:
 
     ## SIGNATURE
     # flip :: Object => Void
+    # This method not used in part 1
     def flip(self):
         '''
         If the piece is white, changes it to black. If the piece is black, 
         changes it to white.
-        Nothing returned
         '''
         if self.color == "white": 
             self.color = "black"
@@ -397,7 +410,9 @@ class GamePiece:
         self.draw_tile()
 
 
+
 #### Game play ####
 if __name__ == "__main__":
+    # All gameplay functionality is done within the GameBoard class
     board = GameBoard(4)
     turtle.done()

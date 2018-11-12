@@ -2,20 +2,46 @@ CS5001
 HW 6: Othello Design
 Evan Douglass
 
-========== MAIN DATA STRUCTURES ==========
+========== MAIN ==========
+
+* Initialize the game board and set turn to be the user's (board = GameBoard(8))
+* turtle.done()
+
+There is nothing else in the main function because all of the functionality
+is inside the classes below. All I need to do here is initialize the game and
+then wait for clicks on the screen. To see a more in-depth description of
+the gameplay, see the play method at the bottom of the GameBoard class.
+
+========== /MAIN ==========
+
+========== DATA STRUCTURES ==========
 
 In the GameBoard class there will be a list used to represent the current state 
 of the Othello board. It will contain the values None or a Gamepiece object 
 depending on whether the square contains a tile or not. The list will have a 
 length of n*n, where n is the number of squares on one side of the board. Each 
-index represents one square on the board, from 0 on the bottom left to n*n on 
-the upper right, increasing left to right, bottom to top.
+index represents one square on the board, from 0 on the bottom left to n*n - 1 
+on the upper right, increasing left to right, bottom to top. See example below.
++---+---+
+| 2 | 3 |
++---+---+
+| 0 | 1 |
++---+---+
 
 There will be another list in GameBoard containing Square objects. This is 
 initialized when the game board is drawn and is used to determine if one of 
-the squares was clicked on, so a tile can be drawn there.
+the squares was clicked on, so a tile can be drawn there. It is structured 
+like the tiles list above except there are no elements of None.
 
-========== /MAIN DATA STRUCTURES ==========
+A dictionary is used to keep track of valid moves and the tiles that can be flipped
+if that move is chosen. It will be in the form of integer keys and integer list 
+values. This dictionary will be cleared and repopulated after each move. The keys 
+will be used to validate the user's moves/clicks. The values will be used to quickly
+flip tiles after a move. They will also inform the computer of where to put a tile 
+during its turn. The location corresponding to the longest value list will be chosen. 
+If there are more than one, the last one it finds will be its choice.
+
+========== /DATA STRUCTURES ==========
 
 ========== MODULE CONSTANTS AND GLOBAL VARIABLES ==========
 
@@ -24,27 +50,58 @@ the squares was clicked on, so a tile can be drawn there.
 * Screen window -- The window that contains the game.
 * Turtle othello -- Used for drawing in the window.
 
-========== /MODULE CONSTANTS ==========
+========== /MODULE CONSTANTS AND GLOBAL VARIABLES ==========
 
 ========== CLASSES ==========
 
 Name: GameBoard
 Purpose:
-    GameBoard represents a board of the game Othello. It also contains all the functions to execute game logic.
+    GameBoard represents a board of the game Othello. It also contains all the game logic.
 
 Constants:
-    *
+    * None
 
 Variables: 
-    * int size -- The length of one side of the board.
+    * int n -- The length of one side of the board as measured by the number (n) of squares.
+    * int size -- The length of one side of board as measured by pixels.
     * str turn -- Contains the values "white" or "black" depending on whos turn it is. Initializes to black; the user will go first.
     * Gamepiece[] pieces -- A list of the contents of each square on the board. Either a Gampiece object or None for empty squares.
+    * int black -- The current number of black tiles on the board.
+    * int white -- The current number of white tiles on the board.
     * Square[] squares -- A list of each square on the board.
+    * Dictionary<int, int[]> valid_moves -- A dictionary with the location of valid moves as keys and a list of the tiles that can be flipped as values. This will be repopulated after every move.
 
 Methods:
-    draw_board(self, n)
+    __init__(self, n)
+        Draws the starting board and sets up gameplay.
+        int n -- The number of squares on one side of the board (it's length
+        in squares).
+
+        Initialize all variables listed above
+        Draw the board
+        Draw the start tiles
+        Get first valid moves
+        Set up gameplay via window.onclick
+
+    init_squares(self, corner):
+        Populates the self.squares list.
+        int corner -- A number representing the x & y coordinate of the 
+        first square.
+        Returns a list of Square objects
+        
+        Initialize a list and an index
+        Initialize the starting y position (bottom left corner)
+        For each row on the board starting from the bottom
+            Initialize the starting x position
+            For each column
+                Create a Square object and add it to the squares list
+                Increment the index and x position by the size of one square (SQUARE)
+            Increment the y position to the next row
+        Return the list
+
+    draw_board(self)
         Draws an nxn board with a green background.
-        int n -- The number of squares on one side of the board.
+        Nothing returned
 
         Set up Screen
         Set up Turtle
@@ -53,23 +110,45 @@ Methods:
         Draw background
         Draw lines
     
-    draw_lines(self, turt, n)
+    draw_lines(self)
         Draws a line the length of the board. A helper function for draw_board.
-        Turtle turt -- A Turtle object.
-        int n -- The number of squares to draw on the board in one direction.
+        Nothing returned
 
         Draw a line the length of n squares
+    
+    draw_start_tiles(self):
+        Draws the four starting tiles on the board.
+        Nothing returned
 
-    find_center_squares(self, n)
+        Determine the index of the four center squares (find_center_squares)
+        For each index
+            Initialize a GamePiece in the same index
+            Draw it on the board
+            Alternate the color as needed
+
+    draw_box(self)
+        Draws a black box used to display the end-of-game text. The box will cover
+        two rows of squares and span across the whole screen.
+        Nothing returned
+
+        Raise turtle
+        Set x position to the left side of the screen
+        Set y position to -SQUARE
+        Set length to the full screen size
+        Set width to 2 * SQUARE
+        Move turtle to (x, y)
+        Lower turtle
+        Set outline color to white and fill to black
+        Draw the box
+
+    find_center_squares(self)
         Finds the four center starting squares on the board.
-        int n -- The number of squares on one side of the board. Must be even.
         Returns a tuple of ints representing the indexes of the four center squares on the draw_board.
 
         # If n is even and the board grid is indexed from 0 to n*n
         # then the upper right center square can be found with the formula:
         # 0.5(n**2 + n)
-        # I worked this out on paper myself.
-        # The remaining squares can be found by subtracting from that result:
+        # The remaining squares can be found by subtracting from that result
         # 1, n, n+1 for upper left, lower right, and lower left respectively
         ur = 0.5(n**2 + n)
         ul = ur - 1
@@ -78,55 +157,234 @@ Methods:
         return (ur, ul, lr, ll)
 
     place(self, location, color)
-        Initializes a Gamepiece object on the Othello board at the given location and with the given color.
-        int location -- An index representing a square on the board (0 to n*n).
+        Initializes a Gamepiece object and draws it on the board at the given location and with the given color.
+        int location -- An index representing a square on the board (0 to n**2-1).
         str color -- The color of the piece being placed.
+        Nothing returned
 
         Initialize a Gamepiece object with location and color
         Add to self.board in location
         Draw piece on the board with Gamepiece.draw_tile
-        (Use in onclick Screen method?)
+        Track the piece in the pieces list
+        Increment the number of tiles of this color
 
-    get_location(self, mouse_x, mouse_y)
-        Gets board square location data based on the coordinates of a mouse click.
-        int mouse_x -- x coordinate of the mouse
-        int mouse_y -- y coordinate of the mouse
-        Returns an int[] where index 0 represents the board square that was clicked in and indices 1 & 2 are the x and y-coordinates of the square's center. Does nothing if the click is outside of the board area.
+    is_full(self)
+        Tests whether the board is full of tiles or not.
+        Returns a boolean value.
 
-        Increase x and y to account for board vs screen size
+        If there is any value in self.pieces that is None
+            Then the board is not full
 
-    is_valid_move(self)
+    announce_winner(self)
+        Determines and announces the winner of the current game.
+        Nothing returned
 
-    count_tiles(self)
+        Determine the winner from self.white and self.black
+        Create a message to congradulate the winner, or announce a tie
+        Create a message with the final score
+        Draw a text box to help with message visibility
+        Display the messages centered in the text box
+        Print the message to the console
+
+    ----------- Methods for part 2 -----------
+
+    find_valid_moves(self)
+        Determines which squares are valid moves based on the current state of the game and which tiles can be flipped from those moves.
+        Nothing returned
+
+        Clear current valid_moves dict
+        For each square on the board
+            Find the tiles that could be flipped from there (put in a list)
+            If the list is empty
+                It is not a valid move
+            If it is not empty
+                Add square location: list of tiles to valid_moves
+
+    all_can_capture(self, location)
+        Finds all of the tiles that can be captured from the given location.
+        int location -- An integer identifying a square on the board.
+        Returns a list of integers representing locations.
+
+        If the square is not empty
+            Return an empty list -> not a valid move
+        If it is
+            Initialize list
+            Check in each direction around the square (n, ne, e, se, s, sw, w, nw)
+            For each direction
+                Find the locations of tiles that can be captured
+                Add them to the list
+            Return the list
+
+    can_capture_in_direction(self, location, direction)
+        Finds the tiles that can be captured from the given location in the given direction.
+        int location -- An integer identifying a square on the board.
+        str direction -- The direction to look in. Can be one of: n, ne, e, se, s, sw, w, nw
+        Returns a list of integers representing locations.
+
+        Initialize a list
+        Set an increment based on direction (set_increment)
+        Set a max/min value for incrementing (set_max_min)
+        Get next location
+        While the next location is not above/below max/min
+            If the next location is empty
+                Return empty list -> nothing can be captured 
+            If the next location has an opponent's tile
+                Append tile to list
+            If the next location has own tile
+                break
+            Increment location 
+        return list
+
+    choose_move(self)
+        Determines which move the computer will make during its turn.
+        Returns the location of the computer's move as an integer.
+
+        Initialize tracker variable for key at -1
+        Initialize tracker variable for list length at 0
+        (will be at least one list of greater length if game is not over)
+        For each key in valid_moves dict
+            Check the length of the list associated with the key
+            If the length is greater than or equal to the tracker
+                Set length tracker to new length
+                Set key tracker to new key
+        Return the last key with the biggest length
+
+    set_increment(self, direction)
+        Determines an approprate increment for moving from one square location to the next in the given direction.
+        str direction -- The direction to look in. Can be one of: n, ne, e, se, s, sw, w, nw
+        Returns an integer increment value
+
+        For north
+            inc = n
+        For south
+            inc = -n
+        For east
+            inc = 1
+        For west
+            inc = -1
+        For northeast
+            inc = n + 1
+        For northwest
+            inc = n - 1
+        For southeast
+            inc = -(n - 1)
+        For southwest
+            inc = -(n + 1)
+
+    set_max_min(self, location, direction)
+        For the given location determines the maximum or minimum square location along the given direction that is still on the board.      
+        int location -- An integer identifying a square on the board.
+        Returns the min or max square location along direction that is still on the board.
+
+        row_num = location // n     # from 0 to n-1
+        row_start = row_num * n
+        max_steps = n - 1
+        row_end = row_start + max_steps
+        board_max = n*n - 1
+        board_min = 0
+
+        For north
+            max = board_max
+        For south
+            min = board_min
+        For east
+            The first number in a row is a multiple of n, so max = max in row
+            max = row_start + max_steps
+        For west
+            min = row_start          # first number of row
+        For northeast
+            Viewed as a 2D grid, the number of steps to get to the right edge is also the number of 
+            steps to take up from the edge
+            steps = max_steps - (location % n)
+            max = row_end + (steps * n)
+            if max > board_max
+                max = board_max
+        For southeast
+            Same logic as northeast, but downwards
+            steps = max_steps - (location % n)
+            min = row_start - (steps * n)
+            if min < board_min
+                min = board_min
+        For northwest
+            steps = location - row_start
+            max = row_start + (steps * n)
+            if max > board_max
+                max = board_max
+        For southwest
+            steps = locaiton - row_start
+            min = row_start - (steps * n)
+            if min < board_min
+                min = board_min
 
     flip_tiles(self, location_list)
+        Drives the flipping of opponent tiles after a move is made.
+        int[] locaiton_list -- A list of all the index locations of tiles to be flipped.
+        Nothing returned
+
+        for location in locaiton_list:
+            self.flip_tile(location)
+
+    flip_tile(self, location)
+        Changes the color of a single tile on the board.
+        int location -- The index location of the tile to be flipped.
+        Nothing returned
+
+        If the square in location is not empty
+            Change the color of the piece in location with piece.flip
+        Increment/decrament self.black & self.white as needed.
+
+    ----------- /Methods for part 2 -----------
+
+    play(self, x, y)
+        This is the method used in the window's onclick method, called upon 
+        initialization. It is what drives the gameplay of this program.
+        int x -- The x-coordinate of a mouse click.
+        int y -- The y-coordinate of a mouse click.
+        Nothing returned
+
+        If it is the user's turn and they click inside a square that is a valid move (self.valid_moves)
+            Place a tile there for the user
+            Flip all the computer's tiles that have been captured and track changes
+            Switch turns
+        # Computer player not implemented in part 1
+        If it is the computer's turn
+            Evaluate which valid move captures the most tiles
+            Place a tile in that square
+            Flip all the user's tiles that have been captured and track changes
+            Switch turns
+        
+        Find new valid moves
+        If there are none, then the game is over.
+            Determine the winner and display a message
+            Also display the score
 
 ==========
 
 Name: Square
 Purpose:
-    Square represents the area of one square on the Othello board.
+    Square represents one square on the Othello board.
+
 Constants:
-    * 
+    * None
 
 Variables:
-    * int index -- A unique integer identifying the square.
-    * int size -- The legth of one side of the square.
+    * int location -- A unique integer identifying the square's location on the board.
+    * int size -- The legth of one side of the square in pixels.
     * int x -- The lower left x-coordinate of the square.
     * int y -- The lower left y-coordinate of the square.
     * int[] center -- The (x, y) coordinates of the square's center.
 
 Methods:
     __init__(self, index, x, y)
-        assign variables
-        calculate center
+        Assign variables
+        Calculate center
 
     calc_center(self)
         Finds the coordinates of the square's center.
         Returns a tuple containing the coordinates.
 
-        center x is (x+length) - length//2
-        center y is (y+length) - length//2
+        center x is (x+length) - length/2
+        center y is (y+length) - length/2
         return (x, y)
 
     was_clicked(self, x, y)
@@ -135,24 +393,62 @@ Methods:
         int y -- The y-coordinate of a mouse click.
         Returns a boolean value.
 
-        if self.x <= x <= self.x + size
-        and self.y <= y <= self.y + size
-           then return True
+        if self.x < x < self.x + self.size and self.y < y < self.y + self.size
+           return True
         else return False
+    
+    is_empty(self, state):
+        Tests if the square contains a tile
+        GamePiece[] state -- A list of GamePiece objects representing the 
+        current board layout.
+        Returns a boolean value.
+
+        if state[self.location] == None:
+            return True
+        else return False
+
+    peek(self, direction, state)
+        Looks at the next square in the given direction to see if there is a 
+        tile there and what the color is.
+        str direction -- The direction to look in. Can be one of: n, ne, e, se, s, sw, w, nw
+        GamePiece[] state -- The current state of the Othello board.
+        Returns the GamePiece in the next square or None if the square is 
+        empty or off the board.
+
+        Find the index location of the square in the given location
+        If the location is on the board
+            Return the contents of that square
+        If the location is not on the board
+            Return None
 
 ==========
 
 Name: Gamepiece
 Purpose:
     Gamepiece represents a single playing piece in Othello.
-Constants:
-    * 
-Variables:
-    * str color -- The color that is currently showing on the board. Can be white or black.
-    * int location -- An index representing a square on the Othello board (0 to n*n).
-Methods:
-    __init__(self, location, color)
 
+Constants:
+    * None
+
+Variables:
+    * int location -- An index representing a square on the Othello board (0 to n*n).
+    * str color -- The color that is currently showing on the board. Can be white or black.
+    * int center_x -- The x-coordinate of the tile's center.
+    * int center_y -- The y-coordinate of the tile's center.
+
+Methods:
+    __init__(self, location, color, x, y)
+        Initialize the above variables
+    
+    draw_tile(self)
+        Draws an Othello tile on the game board using the provided Turtle object.
+        Nothing returned
+
+        Raise turt
+        Move turt to center_x, center_y
+        Lower turt
+        turt.dot(radius, self.color)
+    
     flip(self)
         If the piece is white, changes it to black. If the piece is black, changes it to white.
         Nothing returned
@@ -162,48 +458,5 @@ Methods:
         elif self.color is black
             self.color = white
         Redraw the tile with its new color (draw_tile)
-    
-    draw_tile(self, turt, color, x, y)
-        Draws an Othello piece on the game board using the provided Turtle object.
-        Turtle turt -- A Turtle object to draw on the board.
-        str color -- The color of the piece being placed.
-        int x -- The x coordinate of the center of the tile
-        int y -- The y coordinate of the center of the tile
-        Nothing returned
-
-        Raise turt
-        Move turt to center_x, center_y
-        Lower turt
-        Set fill color to color
-        turt.circle(radius)
 
 ========== /CLASSES ==========
-
-========== Main ==========
-
-* Initialize the game board and set turn to be the user's (board = GameBoard(8))
-* search for all valid moves
-* while the board is not full and there are valid moves
-    * if it's the user's turn
-        * wait for click
-            * if click is on the board and in a valid location
-                * place a black tile in that square
-                * flip all white tiles between the new tile and any other black tiles
-                * change turns
-    * elif it's the computer's turn
-        * for each valid move
-            * find the largest number of tiles that can be flipped from there
-        * place a white tile in the location that will flip the largest number of tiles
-        * flip the tiles
-        * change turns
-    * else
-        * do nothing if it's the user's turn and there is not a valid click
-    * search for all valid moves
-* count the number of black and white tiles on the board
-* if there are more black tiles
-    * user wins, display "you win" message
-* else
-    * computer wins, display "you lose" message
-* turtle.done()             
-
-========== /Main ==========
