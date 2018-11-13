@@ -10,14 +10,14 @@ Evan Douglass
 There is nothing else in the main function because all of the functionality
 is inside the classes below. All I need to do here is initialize the game and
 then wait for clicks on the screen. To see a more in-depth description of
-the gameplay, see the play method at the bottom of the GameBoard class.
+the game-play, see the play method at the bottom of the GameBoard class.
 
 ========== /MAIN ==========
 
 ========== DATA STRUCTURES ==========
 
 In the GameBoard class there will be a list used to represent the current state 
-of the Othello board. It will contain the values None or a Gamepiece object 
+of the Othello board. It will contain the values None or a GamePiece object 
 depending on whether the square contains a tile or not. The list will have a 
 length of n*n, where n is the number of squares on one side of the board. Each 
 index represents one square on the board, from 0 on the bottom left to n*n - 1 
@@ -64,8 +64,8 @@ Constants:
 Variables: 
     * int n -- The length of one side of the board as measured by the number (n) of squares.
     * int size -- The length of one side of board as measured by pixels.
-    * str turn -- Contains the values "white" or "black" depending on whos turn it is. Initializes to black; the user will go first.
-    * Gamepiece[] pieces -- A list of the contents of each square on the board. Either a Gampiece object or None for empty squares.
+    * str turn -- Contains the values "white" or "black" depending on whose turn it is. Initializes to black; the user will go first.
+    * GamePiece[] pieces -- A list of the contents of each square on the board. Either a GamPiece object or None for empty squares.
     * int black -- The current number of black tiles on the board.
     * int white -- The current number of white tiles on the board.
     * Square[] squares -- A list of each square on the board.
@@ -73,7 +73,7 @@ Variables:
 
 Methods:
     __init__(self, n)
-        Draws the starting board and sets up gameplay.
+        Draws the starting board and sets up game-play.
         int n -- The number of squares on one side of the board (it's length
         in squares).
 
@@ -81,7 +81,7 @@ Methods:
         Draw the board
         Draw the start tiles
         Get first valid moves
-        Set up gameplay via window.onclick
+        Set up game-play via window.onclick
 
     init_squares(self, corner):
         Populates the self.squares list.
@@ -110,7 +110,7 @@ Methods:
         Draw background
         Draw lines
     
-    draw_lines(self)
+    draw_line(self)
         Draws a line the length of the board. A helper function for draw_board.
         Nothing returned
 
@@ -157,14 +157,14 @@ Methods:
         return (ur, ul, lr, ll)
 
     place(self, location, color)
-        Initializes a Gamepiece object and draws it on the board at the given location and with the given color.
+        Initializes a GamePiece object and draws it on the board at the given location and with the given color.
         int location -- An index representing a square on the board (0 to n**2-1).
         str color -- The color of the piece being placed.
         Nothing returned
 
-        Initialize a Gamepiece object with location and color
+        Initialize a GamePiece object with location and color
         Add to self.board in location
-        Draw piece on the board with Gamepiece.draw_tile
+        Draw piece on the board with GamePiece.draw_tile
         Track the piece in the pieces list
         Increment the number of tiles of this color
 
@@ -180,7 +180,7 @@ Methods:
         Nothing returned
 
         Determine the winner from self.white and self.black
-        Create a message to congradulate the winner, or announce a tie
+        Create a message to congratulate the winner, or announce a tie
         Create a message with the final score
         Draw a text box to help with message visibility
         Display the messages centered in the text box
@@ -250,7 +250,7 @@ Methods:
         Return the last key with the biggest length
 
     set_increment(self, direction)
-        Determines an approprate increment for moving from one square location to the next in the given direction.
+        Determines an appropriate increment for moving from one square location to the next in the given direction.
         str direction -- The direction to look in. Can be one of: n, ne, e, se, s, sw, w, nw
         Returns an integer increment value
 
@@ -311,17 +311,17 @@ Methods:
             if max > board_max
                 max = board_max
         For southwest
-            steps = locaiton - row_start
+            steps = location - row_start
             min = row_start - (steps * n)
             if min < board_min
                 min = board_min
 
     flip_tiles(self, location_list)
         Drives the flipping of opponent tiles after a move is made.
-        int[] locaiton_list -- A list of all the index locations of tiles to be flipped.
+        int[] location_list -- A list of all the index locations of tiles to be flipped.
         Nothing returned
 
-        for location in locaiton_list:
+        for location in location_list:
             self.flip_tile(location)
 
     flip_tile(self, location)
@@ -331,13 +331,13 @@ Methods:
 
         If the square in location is not empty
             Change the color of the piece in location with piece.flip
-        Increment/decrament self.black & self.white as needed.
+        Increment/decrement self.black & self.white as needed.
 
     ----------- /Methods for part 2 -----------
 
     play(self, x, y)
         This is the method used in the window's onclick method, called upon 
-        initialization. It is what drives the gameplay of this program.
+        initialization. It is what drives the game-play of this program.
         int x -- The x-coordinate of a mouse click.
         int y -- The y-coordinate of a mouse click.
         Nothing returned
@@ -369,7 +369,7 @@ Constants:
 
 Variables:
     * int location -- A unique integer identifying the square's location on the board.
-    * int size -- The legth of one side of the square in pixels.
+    * int size -- The length of one side of the square in pixels.
     * int x -- The lower left x-coordinate of the square.
     * int y -- The lower left y-coordinate of the square.
     * int[] center -- The (x, y) coordinates of the square's center.
@@ -423,9 +423,9 @@ Methods:
 
 ==========
 
-Name: Gamepiece
+Name: GamePiece
 Purpose:
-    Gamepiece represents a single playing piece in Othello.
+    GamePiece represents a single playing piece in Othello.
 
 Constants:
     * None

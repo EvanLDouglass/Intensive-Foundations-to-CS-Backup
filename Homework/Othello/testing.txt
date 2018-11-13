@@ -1,0 +1,565 @@
+CS5001
+HW 6: Othello Testing
+Evan Douglass
+
+For homework 6, I tested the following methods (each described in detail below the
+full list). Some functions for homework 7 have not been tested yet.
+
+Class: GameBoard
+    __init__
+    init_squares
+    draw_board
+    draw_lines
+    draw_start_tiles
+    draw_box
+    find_center_squares
+    place
+    is_full
+    announce_winner
+    play
+
+Class: Square
+    __init__
+    calc_center
+    was_clicked
+    is_empty
+
+Class: GamePiece
+    __init__
+    draw_tile
+
+------------------------------
+
+GameBoard
+
+    __init__(self, n)
+    When this method is called, it also calls several other functions. When those
+    functions work, this one does. For that reason, the below summary only applies
+    to functionality created directly from __init__. The other functions are tested
+    below.
+        Good
+        In: 4
+        Out: self.n = 4
+            self.size = 200
+            self.turn = "black"
+            self.pieces = A list with 16 None values
+            self.black = 0
+            self.white = 0
+            start = -100     # The x & y coordinate of the first square
+            clicks on the board call the play method
+        In: 8
+        Out: self.n = 8
+            self.size = 400
+            self.turn = "black"
+            self.pieces = A list with 64 None values
+            self.black = 0
+            self.white = 0
+            start = -200     # The x & y coordinate of the first square
+            clicks on the board call the play method
+
+        Bad
+        In: 8.5
+        Out: self.n = 8
+            self.size = 400
+            self.turn = "black"
+            self.pieces = A list with 64 None values
+            self.black = 0
+            self.white = 0
+            start = -200     # The x & y coordinate of the first square
+            clicks on the board call the play method
+        In: 2
+        Out: Screen briefly appears then exits due to a value error in draw_board
+        In: 5
+        Out: Screen briefly appears then exits due to a value error in draw_board
+        In: -34
+        Out: Screen briefly appears then exits due to a value error in draw_board
+        In: "h"
+        Out: ValueError: invalid literal for int() with base 10: 'h'
+
+        The above tests cover all the basic data types but do not test against other objects
+        being passed as n. However, the first thing the method does is convert n into an int.
+        So if n cannot be converted into an int, then the method causes a ValueError. Thus 
+        guaranteeing that n is an integer before moving on to any of the other attributes.
+
+        In first testing this function it did not have the type checking/guarantees that it has now.
+        However, that was OK at first because a lot of that was done in draw_board already.
+
+    def init_squares(self, corner)
+    Populates the self.squares list.
+        Good
+        In: -100
+        Out: A list of 16 Square objects with (x, y) values in increments of 50
+            from (-100, -100) to (100, 100), forming a square on a Cartesian chart.
+        In: -200
+        Out: A list of 64 Square objects with (x, y) values in increments of 50
+            from (-200, -200) to (200, 200), forming a square on a Cartesian chart.
+        In: Any number
+        Out: A list of int(number)**2 objects with (x, y) values in increments of 50
+            from the given corner to (start + 50*n, start + 50*n), forming a 
+            square on a Cartesian chart.
+        
+        Bad
+        In: "hello"
+        Out: ValueError: invalid literal for int() with base 10
+        In: ""
+        Out: ValueError: invalid literal for int() with base 10
+
+        As with __init__ these tests do not cover more complex data types being used
+        as input, but it too first converts corner into an integer, so more complex
+        data types would throw an error. This does cover all types of numbers as well
+        as strings.
+
+        There were some important problems with this method before testing. It created
+        the lists just fine, but the Square objects in it had incorrect (x, y) coordinates.
+        The x-values kept going past the length of the board while the y-values looked fine.
+        The problem was that I was not starting over the x-value count before iterating 
+        through each new row.
+
+    draw_board(self)
+    Draws an self.n by self.n board with a green background.
+        Good
+        In: self.n = 4
+        Out: A window appears on the screen and a 4x4 square Othello board is drawn
+            inside without any tiles
+        In: self.n = 8
+        Out: A window appears on the screen and a 8x8 square Othello board is drawn
+            inside without any tiles
+        In: self.n = 20
+        Out: A window appears on the screen and a 20x20 square Othello board is drawn
+            inside without any tiles
+
+        Bad
+        In: 2
+        Out: ValueError: n must be even and at least 4
+        In: 9
+        Out: ValueError: n must be even and at least 4
+        In: -20
+        Out: ValueError: n must be even and at least 4
+
+        draw_board is only called from __init__ after already making sure that self.n is 
+        an integer. This method further validates that self.n is greater than or equal to 4 and even.
+        Therefore, only integers need to be tested. There are even and odd numbers 4 or greater and
+        less than 4, so all possibilities are covered.
+        
+        This is one of the starter code functions given to us, so I was pretty sure
+        it worked when I first ran it. As expected, it did. The only problems I ran into were
+        when I converted it into a method from a function. However that only required tidying
+        up syntax errors, not any logic bugs.
+
+    draw_line(self)
+    Draws a line. this is a helper function for draw_board.
+        Good
+        In: self.n = 4
+        Out: A line is drawn the length of the board (200px) from where the turtle is.
+        In: self.n = 8
+        Out: A line is drawn the length of the board (400px) from where the turtle is.
+        In: self.n = -20
+        Out: A line is drawn the length of the board (-1000px) from where the turtle is.
+        In: self.n = 50.6
+        Out: A line is drawn the length of the board from where the turtle is.
+            Presumably the float is converted to an integer on the back-end.
+        
+        Bad
+        In: self.n is a string
+        Out: TypeError: can't multiply sequence by non-int of type 'float'
+        In: self.n is an iterable object
+        Out: TypeError: can't multiply sequence by non-int of type 'float'
+
+        This function is called from within draw_board after self.n has been validated
+        to be an even integer greater than or equal to 4. So there are actually more cases 
+        described here than there would be in normal operation of the game.
+
+        This was also a starter-code function, so it worked fine the first time.
+
+    draw_start_tiles(self)
+    Draws the four starting tiles on the board. Has a dependency on find_center_squares 
+    and place, which calculate the center square locations and draw the tiles respectively.
+        Good
+        In: We have a 4x4 board
+        Out: Rotating counter-clockwise around the four center squares from the top-right, turtle draws
+            a white tile, black tile, white tile, black tile
+        In: We have a 8x8 board
+        Out: Rotating counter-clockwise around the four center squares from the top-right, turtle draws
+            a white tile, black tile, white tile, black tile
+        In: We have a nxn board, where n is even and greater than 4
+        Out: Rotating counter-clockwise around the four center squares from the top-right, turtle draws
+            a white tile, black tile, white tile, black tile
+
+        Bad
+        In: We have a 2x2 board
+        Out: Rotating counter-clockwise around every square from the top-right, turtle draws
+            a white tile, black tile, white tile, black tile. The game is over.
+        In: We have a 5x5 board
+        Out: The four tiles appear, but in the wrong locations.
+        In: We have a -4x-4 board
+        Out: This is logically impossible.
+
+        This method is fairly simple because it uses two other methods to do it's work.
+        There is no real input values for it so I used different sized boards to describe its 
+        behavior above. A board has to have self.n be a positive integer, so all possibilities 
+        are accounted for here.
+
+        I did have some trouble with testing this method, but that was mainly due to troubles
+        with the the one described above in init_squares. The first time this ran, no tiles 
+        showed up. It turned out they had been drawn off-screen because the Square objects
+        were given the wrong coordinates.
+
+    draw_box(self)
+    Draws a black box used to display the end-of-game text.
+        Good
+        In: self.size = 200
+        Out: Draws a black box with a white outline, the length of the entire window (250px)
+            and the width of 2 squares (100px) across the middle of the window.
+        In: self.size = 350
+        Out: Draws a black box with a white outline, the length of the entire window (400px)
+            and the width of 2 squares (100px) across the middle of the window.
+        In: self.size = 50
+        Out: Draws a black box with a white outline, the length of the entire window (100px)
+            and the width of 2 squares (100px) across the middle of the window.
+        In: self.size is a positive float
+        Out: Still works, as seen in draw_line.
+        
+        Bad
+        In: self.size = -200
+        Out: would draw the box using negative numbers and would not appear on the screen.
+        In: self.size is a string
+        Out: TypeError: unsupported operand type(s) for //: 'str' and 'int'
+
+        Here, self.size is referring to the size of the board in pixels. It is found by 
+        multiplying self.n with SQUARE. Since self.n and SQUARE are both integers, the
+        result must be an integer. There are positive and negative integers tested here 
+        so each type of value possible is tested.
+
+        draw_box had the same initial problem as draw_start_tiles, but for a different
+        reason. The box did not show up at first because it was drawn off-screen. I had 
+        set the turtle to be heading in the wrong direction when it started drawing. When 
+        that was fixed, the box was drawn as desired.
+
+    find_center_squares(self)
+    Finds the four center starting squares on the board.
+        Good
+        In: self.n = 4
+        Out: (10, 9, 6, 5)
+        In: self.n = 8
+        Out: (36, 35, 28, 27)
+        In: self.n = 8.5
+        Out: (36, 35, 28, 27)
+
+        Bad
+        In: self.n = 5
+        Out: (15, 14, 10, 9) Note that these are not the center tiles.
+        In: self.n is a string
+        Out: TypeError: unsupported operand type(s) for ** or pow(): 'str' and 'int'
+        In: self.n = -4
+        Out: (-10, -11, -14, -15) Note that -4**2 in python, typed exactly the same, is -16
+
+        As mentioned above, self.n is a positive even integer of 4 or greater. So more test cases
+        than are possible are tried here.
+
+        This was a fun formula to figure out and I was exited to see that it worked great
+        on the first try. The main caveat is that self.n must be even for it to work, as seen 
+        in the "Bad" cases.
+
+    place(self, location, color)
+    Initializes a GamePiece object on the Othello board at the given location and with the given color.
+    Has a dependency on the GamePiece.draw_tile method.
+        Good
+        In: 4, "white"
+        Out: Draws a white tile in the center of square #4, stores it in self.pieces[4]
+            and increments the number of white tiles on the board.
+        In: 11, "black"
+        Out: Draws a black tile in the center of square #11, stores it in self.pieces[11]
+            and increments the number of black tiles on the board.
+
+        Bad
+        In: -1, "white"
+        Out: AssertionError: location must be a positive integer
+        In: 23, "hello"
+        Out: AssertionError: color must be 'white' or 'black'
+        In: "hello", "white"
+        Out: TypeError: '>=' not supported between instances of 'str' and 'int'
+        In: 33, 24
+        Out: ValueError: color must be 'white' or 'black'
+
+        For this method to work, location must be a positive integer and color to be a 
+        string, either "white" or "black". In the "Bad" cases above I cover tests that 
+        account for these things not being true. However I am not positive that I have tested
+        every eventuality. There could be some combination of values that would get passed 
+        my validations and cause something weird to happen.
+
+        I tested this method at the same time as other drawing methods and found the same
+        initial problems as those ones. Specifically, due to errors in the location data of 
+        Square objects, this didn't appear to work at first. But after fixing those errors, tiles
+        starting showing up on the board exactly where they were supposed to. After tests of 
+        game-play, it was clear the storage/tracking of those pieces was also working as planned.
+
+    is_full(self)
+    Tests whether the board is full of tiles or not.
+        Good
+        In: a full board
+        Out: True
+        In: a partially full board
+        Out: False
+
+        Bad
+        In: self.pieces is a list with objects that are not GamePieces
+        Out: If there is a None value, will still return False. 
+        If full, will still return True
+
+        This is probably not a complete list of tests for this method. is_full iterates
+        through self.pieces to see if there are any values of None. If self.pieces had
+        any values other than GamePieces and None, the function would still give a 
+        result. While this is a problem, self.pieces is automatically generated and updated
+        with only GamePiece values. So, if I had to defend against hackers, there would be 
+        a problem, but for a simple game of Othello, I don't expect any trouble.
+
+        I use this method to announce a winner (see below), so I wasn't sure it worked
+        until announce_winner worked. Once I could get text on the screen it was clear 
+        that both methods worked. is_full is pretty simple, so I didn't expect much to
+        go wrong.
+
+    announce_winner(self)
+    Determines and announces the winner of the current game.
+        Good
+        In: self.white = 8, self.black = 8
+        Out: "You Tied\nblack: 8, white: 8" displayed on the screen and printed
+            in the terminal
+        In: self.white = 4, self.black = 12
+        Out: "Black wins!\nblack: 12, white: 4" displayed on the screen and printed
+            in the terminal
+        In: self.white = 12, self.black = 4
+        Out: "White wins!\nblack: 4, white: 12" displayed on the screen and printed
+            in the terminal
+
+        Bad
+        In: self.white and self.black are comparable, but not numbers
+        Out: Will still print the message corresponding to the bigger value
+        In: self.white and self.black are not comparable to each other
+        Out: TypeError during comparisons
+
+        As long as self.black and self.white are integers, this testing should be enough.
+        Unless a user changed the values for these attributes, they are integers. We 
+        are not expected to be protecting against "attacks" either, so this testing
+        should be enough.
+
+        The Turtle object's write method was unfamiliar to me when I first used it here,
+        so announce_winner required a lot of fine-tuning. However there were no large bugs
+        that came up, mostly just syntax or value errors due to unfamiliarity.
+
+    play(self, x, y)
+    This method drives the game. It waits for a mouse click to occur and 
+    if the click is in a valid location it places a tile of color 
+    self.turn in that square. If the board is full, it announces a winner 
+    and terminates, thus stopping the game. 
+    Depends on place and announce_winner
+    Note - This test only for HW6 functionality
+        Good
+        This method is only used in the Screen.onclick method, so x and y are always mouse 
+        click location coordinates
+        In: self.turn = "white", Click on an empty square
+        Out: A white tile is drawn in the center of the square, tracked in self.pieces, 
+            and white tiles incremented by one. self.turn changes to "black". 
+            If that was the last square, game ends.
+        In: self.turn = "black", Click on an empty square
+        Out: A black tile is drawn in the center of the square and tracked. self.turn changes 
+            to "white". If that was the last square, game ends.
+
+        Bad
+        For all of these cases self.turn does not matter
+        In: Click on the boarder of a square
+        Out: Nothing, turn remains the same
+        In: Click on a square containing a tile
+        Out: Nothing, turn remains the same
+        In: Click in the area outside the board
+        Out: Nothing, turn remains the same
+        In: Click on something after game over
+        Out: Nothing
+
+        I tested this method by simply clicking around on the board. It is difficult
+        to foresee all the different scenarios that could happen in a game, but I 
+        believe these are all of the essential tests needed at this stage in development.
+
+        This is a fairly high level method, so when all the other methods were working, 
+        this one did too. However, a lot of the testing of other methods was done through
+        this one. So it was difficult at first to figure out which method was causing a 
+        problem when I came across one. Due to the tight timeline for this assignment
+        I was not able to think as much about modular testing at an early stage as I 
+        would have liked to. However, careful thinking and a lot of print statements
+        helped work out the problems.
+
+
+GamePiece
+
+    __init__(self, location, x, y)
+        Good
+        In: 3, 45, 90
+        Out: self.location = 3
+            self.x = 45
+            self.y = 90
+            self.size = SQUARE
+            self.center depends on calc_center
+        In: 45, -344, -20
+        Out: self.location = 45
+            self.x = -344
+            self.y = -20
+            self.size = SQUARE
+            self.center depends on calc_center
+        
+        Bad
+        In: 34.1, 55.9, -493.2
+        Out: self.location = 34
+            self.x = 55
+            self.y = -493
+            self.size = SQUARE
+            self.center depends on calc_center
+        In: -3, 45, 45
+        Out: AssertionError, location can't be negative
+        In: any value is a non-numerical string
+        Out: ValueError: invalid literal for int() with base 10
+
+        I believe these test cases take care of most of the possible errors that could
+        happen. Passing numeric strings is the main problem I can think of that isn't 
+        accounted for here, or in the method. Other than that, anything that is not a 
+        number causes an error and any number is converted to an integer. The x & y 
+        coordinates can be negative, but the location cannot.
+
+        Seeing as this __init__ is just assignments, I did not come across any bugs...yet.
+
+    calc_center(self)
+    Finds the coordinates of the square's center.
+        Good
+        Format for In = self.x, self.y, self.size = SQUARE = 50px
+        In: -200, -200, 50
+        Out: (-175, -175)
+        In: 0, 0, 50
+        Out: (25, 25)
+        In: -50, 100, 50
+        Out: (-25, 125)
+
+        Bad
+        In: -200.5, -200.5, 50
+        Out: (-175.5, -175.5)
+        In: Any value is a string
+        Out: TypeError for either floor division of a string or subtraction of a string
+
+        This method uses self.x and self.y, which are validated upon __init__, so they
+        will be integers. Given that SQUARE = 50, this method simply adds 25 to x & y to 
+        get the center because x & y represent the lower left corner. Any number will 
+        work fine. Other values will cause errors. However, there are probably some scenarios
+        I have not thought of.
+
+        I did not have any major bug problems here. It is a simple method with basic
+        math.
+
+    was_clicked(self, x, y)
+    Determines if this square was clicked on by the user.
+        Assume for the tests that self.x = 0, self.y = 0, and self.size = SQUARE = 50
+        Good
+        In: 1, 30
+        Out: True
+        In: 49, 1
+        Out: True
+
+        Bad
+        In: -2, -9
+        Out: False
+        In: -2, 25
+        Out: False
+        In: 40, 60
+        Out: False
+        In: 0, 0
+        Out: False
+        In: 25, 0
+        Out: False
+
+        This is one of the more important methods in the game because if it does not
+        operate correctly, then the game does not operate correctly. Given a single 
+        Square object, these tests should suffice because x and y will always be numbers
+        (it is used in GameBoard.play).
+
+        I ran into a few math mistakes at first when I tested this method. It's hard
+        to remember what the exact mistakes were, but I believe I had made the test area
+        of the Square too large, so it was returning True more than it should.
+
+    is_empty(self, state)
+    Tests if the square contains a tile
+        Good
+        In: self.location = 0, state = [None, None, GamePiece, GamePiece]
+        Out: True
+        In: self.location = 2, state = [None, None, GamePiece, GamePiece]
+        Out: False
+
+        Bad
+        In: self.location = 6, state = [None, None, GamePiece, GamePiece]
+        Out: IndexError
+        In: state is a list with other objects
+        Out: Will still give True when a value is None or False otherwise
+
+        self.location is validated upon initialization of the object, so it will
+        be a positive integer. However, it can still be larger than the list
+        length given to the method. This will have to be fixed in the next version.
+        This also works on lists without GamePiece objects, as it is only testing 
+        for None values.
+
+        I did not encounter any major bugs in is_empty.
+
+GamePiece
+
+    __init__(self, location, color, center_x, center_y)
+        Good
+        In: 3, "white", 25, 25
+        Out: self.location = 3
+            self.color = "white"
+            self.x = 25
+            self.y = 25
+        In: 5, "black", -75, -75
+        Out: self.location = 5
+            self.color = "black"
+            self.x = -75
+            self.y = -75
+
+        Bad
+        In: 3.5, "black", 25.5, -25.5
+        Out: self.location = 3
+            self.color = "black"
+            self.x = 25
+            self.y = -25
+        In: -4, "black", 25.5, 25.5
+        Out: AssertionError, location must be positive
+        In: 4, "hello", 25, 25
+        Out: AssertionError, color must be 'black' or 'white'
+
+        Like the GamePiece __init__, this method is assigning values to attributes.
+        location needs to be a positive integer, color either "black" or "white", and
+        the x, y coordinates integers. These tests do make sure that these restrictions are 
+        followed. However, I am not entirely confident that I have covered everything here.
+
+        As this __init__ is just assignment statements, I did not have trouble with bugs
+        here either. However, I did add more input validation following testing.
+
+    draw_tile(self)
+    Draws an Othello piece on the game board using the global Turtle object.
+        Good
+        Input format => self.x, self.y, self.color
+        In: 25, 25, "white"
+        Out: Draws a white tile centered at 25, 25 on the board
+        In: -175, -175, "black"
+        Out: Draws a black tile centered at the given coordinates
+
+        Bad
+        self.x and self.y are validated before use here, so the main problem that 
+        might come up is if they are off the board. But that would be an issue with
+        a different function.
+
+        I do not think this is an exhaustive list of tests and there is probably something
+        missing here. However, this is a surprisingly simple method, only 4 lines and
+        each one is a turtle method. It uses class attributes to find the location, so
+        not much can go wrong after syntax errors are corrected and the attributes are
+        validated before use.
+
+        I did encounter some bugs when first writing this method. I was not able to get a 
+        tile to show up at first. I was using the circle method in the turtle module and there
+        were two main problems. The first is that I was not using begin_fill or end_fill, the
+        second was that the turtle was not drawing the circle around it's center. Interestingly,
+        before realizing either of these problems, I found the dot method and used that instead.
+        dot takes a color as an argument and draws the dot with its center at the turtle's location.

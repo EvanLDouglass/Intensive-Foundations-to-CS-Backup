@@ -28,7 +28,7 @@ class GameBoard:
         int n -- The number of squares on one side of the board (it's length
         in squares).
         '''
-        self.n = n
+        self.n = int(n)
         self.size = SQUARE * n
         self.turn = "black"         # The user will go first and is assigned the black pieces
 
@@ -113,17 +113,17 @@ class GameBoard:
         # Draw the horizontal lines
         for i in range(self.n + 1):
             othello.setposition(corner, SQUARE * i + corner)
-            self.draw_lines()
+            self.draw_line()
 
         # Draw the vertical lines
         othello.left(90)
         for i in range(self.n + 1):
             othello.setposition(SQUARE * i + corner, corner)
-            self.draw_lines()
+            self.draw_line()
 
     ## SIGNATURE
-    # draw_lines :: Object => Void
-    def draw_lines(self):
+    # draw_line :: Object => Void
+    def draw_line(self):
         '''
         Draws a line. this is a helper function for draw_board.
         '''
@@ -164,7 +164,7 @@ class GameBoard:
         # Set start
         othello.penup()
         othello.goto(start_x, start_y)
-        othello.setheading(0)
+        othello.setheading(0)           # Move to the right first
         othello.pendown()
 
         # Draw
@@ -205,6 +205,12 @@ class GameBoard:
         int location -- An index representing a square on the board (0 to n*n).
         str color -- The color of the piece being placed.
         '''
+        assert(location >= 0)
+        assert(color=="white" or color=="black")
+
+        # Ensure location is an integer
+        location = int(location)
+
         # Get center of square
         x, y = self.squares[location].calc_center()
 
@@ -229,7 +235,7 @@ class GameBoard:
         full = True
         for tile in self.pieces:
             # if any tile == None, the board is not full
-            if not tile:
+            if tile == None:
                 full = False
                 break
         return full
@@ -244,7 +250,7 @@ class GameBoard:
         if self.white > self.black:
             message = "White wins!"
         elif self.black > self.white:
-            message = "black wins!"
+            message = "Black wins!"
         else:
             message = "You tied!"
         
@@ -314,9 +320,10 @@ class Square:
         Attributes representing the length of a side (size) and the center
         coordinates (center) of the square are also initialized.
         '''
-        self.location = location
-        self.x = x
-        self.y = y
+        assert(location >= 0)
+        self.location = int(location)
+        self.x = int(x)
+        self.y = int(y)
         self.size = SQUARE
         self.center = self.calc_center()
 
@@ -377,10 +384,12 @@ class GamePiece:
         int center_x -- The x-coordinate of the piece's center.
         int center_y -- The y-coordinate of the piece's center.
         '''
-        self.location = location
+        assert(location >= 0)
+        assert(color == "black" or color == "white")
+        self.location = int(location)
         self.color = color
-        self.x = center_x
-        self.y = center_y
+        self.x = int(center_x)
+        self.y = int(center_y)
 
     ## SIGNATURE
     # draw_tile :: Object => Void
@@ -396,7 +405,7 @@ class GamePiece:
 
     ## SIGNATURE
     # flip :: Object => Void
-    # This method not used in part 1
+    # This method not used in part 1 and not in testing.txt
     def flip(self):
         '''
         If the piece is white, changes it to black. If the piece is black, 
