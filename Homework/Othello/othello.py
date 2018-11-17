@@ -14,7 +14,6 @@ RADIUS = SQUARE - 10    # pixels
 window = turtle.Screen()
 othello = turtle.Turtle()
 
-
 #### Classes ####
 class GameBoard:
     '''
@@ -28,7 +27,11 @@ class GameBoard:
         int n -- The number of squares on one side of the board (it's length
         in squares).
         '''
-        self.n = int(n)
+        assert type(n) == int, "n must be an integer."
+        assert n >= 4, "n must be greater than or equal to 4."
+        assert n % 2 != 1, "n must be even."
+        self.n = n
+
         self.size = SQUARE * n
         self.turn = "black"         # The user will go first and is assigned the black pieces
 
@@ -36,7 +39,7 @@ class GameBoard:
         self.pieces = [None for location in range(n*n)]
         self.black = 0
         self.white = 0
-        start = -n * SQUARE / 2     # The x & y coordinate of the first square
+        start = -n * SQUARE // 2     # The x & y coordinate of the first square
         self.squares = self.init_squares(start)
 
         # Draw the empty board
@@ -44,6 +47,9 @@ class GameBoard:
 
         # Draw the starting tiles
         self.draw_start_tiles()
+
+        # Find first valid moves
+        self.valid_moves = self.find_valid_moves()
 
         # Set up mouse click event listener
         window.onclick(self.play)
@@ -80,10 +86,6 @@ class GameBoard:
         '''
         Draws an nxn board with a green background.
         '''
-        # Ensure n is a valid number
-        if self.n % 2 == 1 or self.n < 4:
-            raise ValueError("n must be even and at least 4")
-
         # Setup window
         window.setup(self.size + SQUARE, self.size + SQUARE)
         window.screensize(self.size, self.size)
@@ -137,17 +139,129 @@ class GameBoard:
         '''
         Draws the four starting tiles on the board.
         '''
-        # ur == upper right, ll == lower left, etc.
-        ur, ul, lr, ll = self.find_center_squares()
-        color = "white"
-        # The order of the lower squares are switched here to get colors right
-        for location in (ur, ul, ll, lr):
-            self.place(location, color)
+        start_tiles = self.find_center_squares()
+        for location in start_tiles:
+            self.place(location)
+            self.switch_turns()
 
-            if color == "white":
-                color = "black"
-            else:
-                color = "white"
+    ## SIGNATURE
+    # switch_turns :: Object => Void
+    def switch_turns(self):
+        '''
+        Changes the turn from black to white or white to black.
+        '''
+        if self.turn == "white":
+            self.turn = "black"
+        elif self.turn == "black":
+            self.turn = "white"
+
+    ## SIGNATURE
+    # find_center_squares :: Object => Integer[]
+    def find_center_squares(self):
+        '''
+        Finds the four center starting squares on the board.
+        Returns a tuple of ints representing the indexes of the four center 
+        squares on the draw_board.
+        '''
+        # If n is even and the board grid is indexed from 0 to n*n
+        # then the upper right center square can be found with the formula:
+        # 0.5(n**2 + n)
+        # The remaining squares can be found by subtracting from that result
+        # 1, n, n+1 for upper left, lower right, and lower left respectively
+        ur = int(0.5 * (self.n**2 + self.n))
+        ul = ur - 1
+        lr = ur - self.n
+        ll = lr - 1
+        # Positioned in an order to make drawing the start pieces simpler
+        # see draw_start_tiles
+        return (ul, ur, lr, ll)
+    
+    ## SIGNATURE
+    # place :: (Object, Integer, String) => Void
+    def place(self, location):
+        '''
+        Initializes and draw a Gamepiece object on the Othello board at the given 
+        location and with the given color.
+        int location -- An index representing a square on the board, 0 to (n*n)-1.
+        '''
+        assert type(location) == int, "location must be an integer"
+        assert 0 <= location < self.n*self.n, "location must be within the size of the board"
+
+        # Get center of square
+        x, y = self.squares[location].calc_center()
+
+        # Draw a new tile
+        piece = GamePiece(location, self.turn, x, y)
+        piece.draw_tile()
+
+        # Track the new tile
+        self.pieces[location] = piece
+        if self.turn == "white":
+            self.white += 1
+        elif self.turn == "black":
+            self.black += 1
+
+    ## SIGNATURE
+    # is_full :: Object => Boolean
+    def is_full(self):
+        '''
+        Tests whether the board is full of tiles or not.
+        Returns a boolean value.
+        '''
+        full = True
+        for tile in self.pieces:
+            # if any tile == None, the board is not full
+            if tile == None:
+                full = False
+                break
+        return full
+    
+    ## SIGNATURE
+    # find_winner :: Object => (String, String)
+    def find_winner(self):
+        '''
+        Calculates the winner based on the number of black and white tiles
+        on the board.
+        Returns two strings, the first announces the winner, the second 
+        describes the score.
+        '''
+        # Determine message to display
+        if self.white > self.black:
+            message = "White wins!"
+        elif self.black > self.white:
+            message = "Black wins!"
+        else:
+            message = "You tied!"
+        
+        score = "black: " + str(self.black) + ", white: " + str(self.white)
+
+        return message, score
+
+    ## SIGNATURE
+    # announce_winner :: Object => Void
+    def announce_winner(self):
+        '''
+        Determines and announces the winner of the current game to the user.
+        '''
+        message, score = self.find_winner()
+
+        # Display textbox
+        self.draw_box()
+        
+        # Display message
+        othello.penup()
+        othello.home()
+        othello.color("white")
+        othello.pendown()
+        othello.write(message, align="center", font=("Georgia", 25, "bold", "underline"))
+        print(message)
+
+        # Display score
+        othello.penup()
+        othello.goto(0, -SQUARE//2)
+        othello.pendown()
+        othello.write(score, align="center", font=("Georgia", 16, "bold"))
+        print(score)
     
     ## SIGNATURE
     # draw_box :: Object => Void
@@ -178,101 +292,283 @@ class GameBoard:
         othello.end_fill()
 
     ## SIGNATURE
-    # find_center_squares :: Object => Integer[]
-    def find_center_squares(self):
+    # choose_move :: Object => Integer
+    def choose_move(self):
         '''
-        Finds the four center starting squares on the board.
-        Returns a tuple of ints representing the indexes of the four center 
-        squares on the draw_board.
+        This function is used by the computer player to decide what move to 
+        make. It searches for the valid move that will capture the most tiles.
+        Returns an integer representing the location of a square, or -1 if
+        no valid move exists.
         '''
-        # If n is even and the board grid is indexed from 0 to n*n
-        # then the upper right center square can be found with the formula:
-        # 0.5(n**2 + n)
-        # The remaining squares can be found by subtracting from that result
-        # 1, n, n+1 for upper left, lower right, and lower left respectively
-        ur = int(0.5 * (self.n**2 + self.n))
-        ul = ur - 1
-        lr = ur - self.n
-        ll = lr - 1
-        return (ur, ul, lr, ll)
-    
+        keys = self.valid_moves.keys()
+
+        key = -1
+        length = 0
+        for k in keys:
+            l = len(self.valid_moves[k])
+            if l > length:
+                length = l
+                key = k
+        return key
+
     ## SIGNATURE
-    # place :: (Object, Integer, String) => Void
-    def place(self, location, color):
+    # find_valid_moves :: Object => {Integer: Integer[]}
+    def find_valid_moves(self):
         '''
-        Initializes a Gamepiece object on the Othello board at the given 
-        location and with the given color.
-        int location -- An index representing a square on the board (0 to n*n).
-        str color -- The color of the piece being placed.
+        Determines which squares are valid moves based on the current state of 
+        the game and which tiles can be flipped from those moves.
         '''
-        assert(location >= 0)
-        assert(color=="white" or color=="black")
+        moves = {}
+        for square in self.squares:
+            # Find the tiles that could be flipped from there
+            can_capture = self.all_can_capture(square.location)
 
-        # Ensure location is an integer
-        location = int(location)
+            # If the list is not empty
+            if can_capture:
+                # Add list of tiles to valid_moves
+                moves[square.location] = can_capture
 
-        # Get center of square
-        x, y = self.squares[location].calc_center()
+        return moves
 
-        # Draw a new tile
-        piece = GamePiece(location, color, x, y)
-        piece.draw_tile()
+    ## SIGNATURE
+    # all_can_capture :: (Object, Integer) => Integer[]
+    def all_can_capture(self, location):
+        '''
+        Finds all of the tiles that can be captured from the given location.
+        int location -- An integer identifying a square on the board.
+        Returns a list of integers representing locations.
+        '''
+        assert type(location) == int and 0 <= location < self.n**2,\
+            "location must be a valid board index"
 
-        # Track the new tile
-        self.pieces[location] = piece
+        square = self.squares[location]
+
+        # If the square is not empty
+        if not square.is_empty(self.pieces):
+            # Return an empty list -> not a valid move
+            return []
+
+        # The square is empty
+        else:
+            captured = []
+
+            # Check in each direction around the square
+            for direction in ("n", "ne", "e", "se", "s", "sw", "w", "nw"):
+
+                # Find the locations of tiles that can be captured
+                captured_in_direction = self.can_capture_in_direction(location, direction)
+                # Add them to the total captured
+                captured += captured_in_direction
+            
+            return captured
+
+    ## SIGNATURE
+    # can_capture_in_direction :: (Object, Integer, String) => Integer[]
+    def can_capture_in_direction(self, location, direction):
+        '''
+        Finds tiles that can be captured from the given location in the given direction.
+        int location -- An integer identifying a square on the board.
+        str direction -- The direction to look in. Can be one of: n, ne, e, se, s, sw, w, nw
+        Returns a list of integers representing locations.
+        '''
+        assert type(location) == int and 0 <= location < self.n**2,\
+            "location must be a valid board index"
+        assert direction in ("n", "ne", "e", "se", "s", "sw", "w", "nw"),\
+            "direction must be one of n, ne, e, se, s, sw, w, nw"
+
+        captured = []
+
+        # Set an increment based on direction
+        # inc can be negative or positive
+        inc = self.set_increment(direction)
+
+        # Set a max/min value for incrementing
+        end = self.set_max_min(location, direction)
+
+        # Ensure the stop in range includes end
+        if inc <= 0:
+            end -= 1
+        else:
+            end += 1
+
+        # Get first potential opponent location
+        nxt = location + inc
+
+        # While the next location is not above/below max/min
+        for loc in range(nxt, end, inc):
+            piece = self.pieces[loc]
+            if piece == None:
+                # If there is no piece there
+                # Return empty list because nothing can be captured 
+                return []
+
+            # If the next location has an opponent's tile
+            elif piece.color != self.turn:
+                # Append tile to list
+                captured.append(piece)
+
+            # If the next location has own tile, 
+            elif piece.color == self.turn:
+                captured.append(piece)
+                break
+
+            loc += inc
+        
+        # The while loop can append opponent tiles that can't be captured
+        # if it reaches the end of the board and only encountered opponent tiles.
+        # A final test is needed to ensure the last tile belongs to the 
+        # current player
+        if len(captured) > 0 and captured[-1].color == self.turn:
+            # remove own tile as a captured tile before returning
+            return captured[:-1]
+        else:
+            return []
+
+    ## SIGNATURE
+    # set_increment :: (Object, String) => Integer
+    def set_increment(self, direction):
+        '''
+        Determines an appropriate increment for moving from one square 
+        location to the next in the given direction.
+        str direction -- The direction to look in. Can be one of:
+        n, ne, e, se, s, sw, w, nw
+        Returns an integer increment value
+        '''
+        assert direction in ("n", "ne", "e", "se", "s", "sw", "w", "nw"),\
+            "direction must be one of n, ne, e, se, s, sw, w, nw"
+
+        if direction == "n":
+            inc = self.n
+        elif direction == "s":
+            inc = -self.n
+        elif direction == "e":
+            inc = 1
+        elif direction == "w":
+            inc = -1
+        elif direction == "ne":
+            inc = self.n + 1
+        elif direction == "nw":
+            inc = self.n - 1
+        elif direction == "se":
+            inc = -(self.n - 1)
+        elif direction == "sw":
+            inc = -(self.n + 1)
+
+        return inc
+
+    ## SIGNATURE
+    # set_max_min :: (Object, Integer, String) => (String, Integer)
+    def set_max_min(self, location, direction):
+        '''
+        For the given location, determines the maximum or minimum square 
+        location along the given direction that is still on the board.       
+        int location -- An integer identifying a square on the board.
+        Returns the min or max square location along direction that is 
+        still on the board.
+        '''
+        assert type(location) == int and 0 <= location < self.n**2,\
+            "location must be a valid board index"
+        assert direction in ("n", "ne", "e", "se", "s", "sw", "w", "nw"),\
+            "direction must be one of n, ne, e, se, s, sw, w, nw"
+
+        row_num = location // self.n    # from 0 to n-1
+        row_start = row_num * self.n    # first index in row
+        max_steps = self.n - 1          # squares from first-in-row to last-in-row
+        row_end = row_start + max_steps # last index in row
+        board_max = self.n**2 - 1       # maximum index on board
+        board_min = 0                   # lowest index on board
+
+        # Instead of using a single variable for all conditions I've 
+        # used two, a max and min, because it helps make clear
+        # which direction the iteration will have to go for each case.
+        # A conditional statement determines which is returned.
+        mx = None
+        mn = None
+
+        if direction == "n":
+            # Moving straight up
+            mx = board_max
+        elif direction == "s":
+            # Moving straight down
+            mn = board_min
+
+        elif direction == "e":
+            # Moving right
+            # max = max in row
+            mx = row_end
+        elif direction == "w":
+            # Moving left
+            # min = first in row
+            mn = row_start
+
+        elif direction == "ne":
+            # Viewed as a 2D grid, the number of steps to get to the right
+            # edge is also the number of steps to take up from the edge
+            steps = max_steps - (location % self.n)
+            mx = row_end + (steps * self.n)
+            # Sometimes this is over the max board index
+            if mx > board_max:
+                mx = board_max
+        elif direction == "se":
+            # Same logic as northeast, but downwards
+            steps = max_steps - (location % self.n)
+            mn = row_end - (steps * self.n)
+            if mn < board_min:
+                mn = board_min
+        
+        # Same logic as last set, but backwards
+        elif direction == "nw":
+            steps = location - row_start
+            mx = row_start + (steps * self.n)
+            if mx > board_max:
+                mx = board_max
+        elif direction == "sw":
+            steps = location - row_start
+            mn = row_start - (steps * self.n)
+            if mn < board_min:
+                mn = board_min
+
+        if mx == None:
+            return mn
+        else:
+            return mx
+
+    ## SIGNATURE
+    # flip_tiles :: (Object, Integer[]) => Void
+    def flip_tiles(self, tile_list):
+        '''
+        Drives the flipping of opponent tiles after a move is made.
+        int[] tile_list -- A list of all the index locations of tiles to be flipped.
+        '''
+        for tile in tile_list:
+            self.flip_tile(tile.location)
+
+    ## SIGNATURE
+    # flip_tile :: (Object, Integer) = > Void
+    def flip_tile(self, location):
+        '''
+        Changes the color of a single tile on the board and redraws it.
+        int location -- The index location of the tile to be flipped.
+        '''
+        assert type(location) == int and 0 <= location < self.n**2,\
+            "location must be a valid board index"
+
+        piece = self.pieces[location]
+        square = self.squares[location]
+
+        # If the square in location is not empty
+        if not square.is_empty(self.pieces):
+            # Change the color of the piece
+            piece.flip()
+
+        # Increment/decrement self.black & self.white as needed.
+        color = piece.color
         if color == "white":
             self.white += 1
+            self.black -= 1
         elif color == "black":
             self.black += 1
-
-    ## SIGNATURE
-    # is_full :: Object => Boolean
-    def is_full(self):
-        '''
-        Tests whether the board is full of tiles or not.
-        Returns a boolean value.
-        '''
-        full = True
-        for tile in self.pieces:
-            # if any tile == None, the board is not full
-            if tile == None:
-                full = False
-                break
-        return full
-    
-    ## SIGNATURE
-    # announce_winner :: Object => Void
-    def announce_winner(self):
-        '''
-        Determines and announces the winner of the current game.
-        '''
-        # Determine message to display
-        if self.white > self.black:
-            message = "White wins!"
-        elif self.black > self.white:
-            message = "Black wins!"
-        else:
-            message = "You tied!"
-        
-        score = "black: " + str(self.black) + ", white: " + str(self.white)
-        
-        # Display textbox
-        self.draw_box()
-        
-        # Display message
-        othello.penup()
-        othello.home()
-        othello.color("white")
-        othello.pendown()
-        othello.write(message, align="center", font=("Georgia", 25, "bold", "underline"))
-        print(message)
-
-        # Display score
-        othello.penup()
-        othello.goto(0, -SQUARE//2)
-        othello.pendown()
-        othello.write(score, align="center", font=("Georgia", 16, "bold"))
-        print(score)
+            self.white -= 1
 
     ## SIGNATURE
     # play :: (Object, Integer, Integer) => Void
@@ -285,21 +581,23 @@ class GameBoard:
         int x -- The mouse x position
         int y -- The mouse y position 
         '''
-        # TODO: Search for legal moves
+        # Get legal moves
+        legal = self.valid_moves.keys()
 
         for square in self.squares:
-            if square.was_clicked(x, y) and square.is_empty(self.pieces):
-                
+            if square.was_clicked(x, y) and square.location in legal:
                 # Draw a tile
-                self.place(square.location, self.turn)
+                self.place(square.location)
 
-                # Switch turns
-                if self.turn == "white":
-                    self.turn = "black"
-                else:  # turn == black
-                    self.turn = "white"
+                # Flip captured tiles
+                to_flip = self.valid_moves[square.location]
+                self.flip_tiles(to_flip)
+                self.switch_turns()
                 break
         
+        # Get new valid moves
+        self.valid_moves = self.find_valid_moves()
+
         # When the board is full, announce a winner and finish the game
         if self.is_full():
             self.announce_winner()
@@ -320,10 +618,11 @@ class Square:
         Attributes representing the length of a side (size) and the center
         coordinates (center) of the square are also initialized.
         '''
-        assert(location >= 0)
-        self.location = int(location)
-        self.x = int(x)
-        self.y = int(y)
+        assert type(location) == int and location >= 0, "location must be a non-negative integer"
+        assert type(x) == int and type(y) == int, "x & y must be integers"
+        self.location = location
+        self.x = x
+        self.y = y
         self.size = SQUARE
         self.center = self.calc_center()
 
@@ -378,18 +677,22 @@ class GamePiece:
 
     def __init__(self, location, color, center_x, center_y):
         '''
-        int location -- An index cooresponding to the square that this piece
-        is placed in.
+        int location -- An index cooresponding to the square that this piece is placed in.
         str color -- The color of the piece. Either white or black.
         int center_x -- The x-coordinate of the piece's center.
         int center_y -- The y-coordinate of the piece's center.
         '''
-        assert(location >= 0)
-        assert(color == "black" or color == "white")
-        self.location = int(location)
+        assert type(location) == int and location >= 0,\
+        "location must be a non-negative integer"
+        assert color == "black" or color == "white",\
+        "color must be 'black' or 'white'"
+        assert type(center_x) == int and type(center_y) == int,\
+        "x & y values must be integers"
+
+        self.location = location
         self.color = color
-        self.x = int(center_x)
-        self.y = int(center_y)
+        self.x = center_x
+        self.y = center_y
 
     ## SIGNATURE
     # draw_tile :: Object => Void
@@ -404,6 +707,18 @@ class GamePiece:
         othello.dot(RADIUS, self.color)
 
     ## SIGNATURE
+    # change_color :: Object => Void
+    def change_color(self):
+        '''
+        Simply changes the objects color from black to white, or 
+        from white to black.
+        '''
+        if self.color == "white": 
+            self.color = "black"
+        elif self.color == "black":
+            self.color = "white"
+
+    ## SIGNATURE
     # flip :: Object => Void
     # This method not used in part 1 and not in testing.txt
     def flip(self):
@@ -411,17 +726,18 @@ class GamePiece:
         If the piece is white, changes it to black. If the piece is black, 
         changes it to white.
         '''
-        if self.color == "white": 
-            self.color = "black"
-        elif self.color == "black":
-            self.color = "white"
-
+        self.change_color()
         self.draw_tile()
+
+    ## SIGNATURE
+    # __repr__ :: Object => String
+    def __repr__(self):
+        return self.color + " @ " + str(self.location)
 
 
 
 #### Game play ####
 if __name__ == "__main__":
-    # All gameplay functionality is done within the GameBoard class
-    board = GameBoard(4)
+    board = GameBoard(8)
     turtle.done()
+    
