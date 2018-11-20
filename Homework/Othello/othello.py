@@ -9,6 +9,7 @@ import turtle
 #### Module constants and global variables ###
 SQUARE = 50             # pixels
 RADIUS = SQUARE - 10    # pixels
+SCORES = "./scores.txt"
 
 window = turtle.Screen()
 othello = turtle.Turtle()
@@ -252,8 +253,7 @@ class GameBoard:
         message, score = self.find_winner()
 
         # Display textbox
-        # TODO: remove comment
-        #self.draw_box()
+        self.draw_box()
         
         # Display message
         othello.penup()
@@ -621,6 +621,8 @@ class GameBoard:
             # There was a move, so draw tile and update game state for user
             self.make_move(choice)
 
+            # TODO: if board is full, end game?
+
             # If the user has no moves, go again
             if len(self.valid_moves) == 0:
                 self.switch_turns()
@@ -669,7 +671,52 @@ class GameBoard:
         '''
         self.announce_winner()
         name = window.textinput("Name", "Enter your name to save your score:")
-        # TODO: incorporate file saving
+        if name != "" and name != None:
+            self.save_score(name, SCORES)
+    
+    ## SIGNATURE
+    # save_score :: (Object, String) => Void
+    def save_score(self, name, path):
+        '''
+        Save the user's score to a text file with the given path. The 
+        highest score is saved at the top of the file; the rest is
+        ordered as played.
+        str name -- A name given by the user.
+        str path -- A path to the scores file.
+        '''
+        assert type(name) == str, "name must be a string"
+        assert type(path) == str, "path must be a string"
+
+        try:
+            scores = open(path, "r+")
+
+            # Read first line and make a list of [<name>, <score>]
+            # This will be the current high score
+            first_line = scores.readline().strip().split()
+
+            # If current score is the new high score.
+            if self.black > int(first_line[1]):
+                ### Write the new high score at the top of the file.
+                # Reset position to beginning and read whole file.
+                scores.seek(0, 0)
+                rest = scores.read()
+                # Reset position again and write scores
+                scores.seek(0, 0)
+                scores.write(name + " " + str(self.black) + "\n")
+                scores.write(rest)
+
+            # Did not beat the high score 
+            else:
+                scores.write(name + " " + str(self.black) + "\n")
+            
+            scores.close()
+        
+        except FileNotFoundError:
+            # If the file doesn't exist, create a new one and make the first entry
+            scores = open(path, "w")
+            scores.write(name + " " + str(self.black) + "\n")
+            scores.close()
+
 
     ## SIGNATURE
     # play :: (Object, Integer, Integer) => Void
@@ -684,6 +731,8 @@ class GameBoard:
         '''
         # Temporarily disable further clicks
         window.onclick(None)
+
+        ended_early = False
 
         # Get legal move locations
         legal = self.valid_moves.keys()
@@ -711,6 +760,14 @@ class GameBoard:
             # game is over.
             if not comp_moved and len(self.valid_moves) == 0:
                 self.end_game()
+                ended_early = True
+        
+        # The final test is used for games that end with a full board.
+        # This avoids the problem of seeing the turn switch back and
+        # forth several times when it is obvious already that the game
+        # is over.
+        if board.is_full() and not ended_early:
+            self.end_game()
         
         # Reactivate clicks
         window.onclick(self.play)
@@ -854,4 +911,3 @@ class GamePiece:
 if __name__ == "__main__":
     board = GameBoard(6)
     turtle.done()
-    
