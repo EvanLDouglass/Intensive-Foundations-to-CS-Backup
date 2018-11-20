@@ -881,7 +881,6 @@ def test_choose_move():
 
     six.valid_moves = {}
     assert six.choose_move() == -1
-    
 
 ########## /GameBoard Class Tests ##########
 

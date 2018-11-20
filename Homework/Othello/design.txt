@@ -186,8 +186,6 @@ Methods:
         Display the messages centered in the text box
         Print the message to the console
 
-    ----------- Methods for part 2 -----------
-
     find_valid_moves(self)
         Determines which squares are valid moves based on the current state of the game and which tiles can be flipped from those moves.
         Nothing returned
@@ -333,7 +331,12 @@ Methods:
             Change the color of the piece in location with piece.flip
         Increment/decrement self.black & self.white as needed.
 
-    ----------- /Methods for part 2 -----------
+    computer_move(self)
+        Contains the logic for the computer player's move during a game.
+        Nothing returned
+
+        Choose a move
+        Place a tile in the chosen location
 
     play(self, x, y)
         This is the method used in the window's onclick method, called upon 
@@ -342,21 +345,19 @@ Methods:
         int y -- The y-coordinate of a mouse click.
         Nothing returned
 
-        If it is the user's turn and they click inside a square that is a valid move (self.valid_moves)
-            Place a tile there for the user
-            Flip all the computer's tiles that have been captured and track changes
-            Switch turns
-        # Computer player not implemented in part 1
-        If it is the computer's turn
-            Evaluate which valid move captures the most tiles
-            Place a tile in that square
-            Flip all the user's tiles that have been captured and track changes
-            Switch turns
-        
-        Find new valid moves
-        If there are none, then the game is over.
-            Determine the winner and display a message
-            Also display the score
+        When this function is activated, it is the user's turn
+        If there are valid moves
+            For each square on the board
+                Test if the square was clicked
+                    If it is a valid move
+                        Put a tile there
+                        flip captured tiles
+            Now it's the computer's turn
+        If none of the squares were valid moves
+            Let the computer go
+
+        If the board is full or there are only tiles of one color
+            End the game
 
 ==========
 

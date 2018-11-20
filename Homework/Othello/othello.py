@@ -4,10 +4,9 @@ project for CS5001 at Northeastern University.
 
 Author: Evan Douglass
 '''
-
 import turtle
 
-#### Module constants and global variables ####
+#### Module constants and global variables ###
 SQUARE = 50             # pixels
 RADIUS = SQUARE - 10    # pixels
 
@@ -39,6 +38,7 @@ class GameBoard:
         self.pieces = [None for location in range(n*n)]
         self.black = 0
         self.white = 0
+        self.turns_no_moves = 0
         start = -n * SQUARE // 2     # The x & y coordinate of the first square
         self.squares = self.init_squares(start)
 
@@ -47,6 +47,9 @@ class GameBoard:
 
         # Draw the starting tiles
         self.draw_start_tiles()
+
+        # Display turn
+        self.announce_turn()
 
         # Find first valid moves
         self.valid_moves = self.find_valid_moves()
@@ -68,10 +71,12 @@ class GameBoard:
         index = 0
         # y-coordinates can continuously increase
         y_corner = corner
-        for row in range(self.n):
+        # For each row (using _ because I was getting warnings of unused variable)
+        for _ in range(self.n):         
             # x-coordinate values need to start over on each row
             x_corner = corner
-            for column in range(self.n):
+            # For each column
+            for _ in range(self.n):
                 # Add a square to the tracker list and increment values
                 lst.append(Square(index, x_corner, y_corner))
                 index += 1
@@ -185,7 +190,8 @@ class GameBoard:
         int location -- An index representing a square on the board, 0 to (n*n)-1.
         '''
         assert type(location) == int, "location must be an integer"
-        assert 0 <= location < self.n*self.n, "location must be within the size of the board"
+        assert 0 <= location < self.n*self.n, \
+            "location must be within the size of the board"
 
         # Get center of square
         x, y = self.squares[location].calc_center()
@@ -246,7 +252,8 @@ class GameBoard:
         message, score = self.find_winner()
 
         # Display textbox
-        self.draw_box()
+        # TODO: remove comment
+        #self.draw_box()
         
         # Display message
         othello.penup()
@@ -262,6 +269,36 @@ class GameBoard:
         othello.pendown()
         othello.write(score, align="center", font=("Georgia", 16, "bold"))
         print(score)
+
+    ## SIGNATURE
+    # announce_turn :: Object => Void
+    def announce_turn(self):
+        '''
+        Displays whose turn it is at the top of the board.
+        '''
+        message = self.turn + "'s turn"
+
+        # Draw white box around old text
+        othello.penup()
+        othello.goto(-SQUARE, (self.size//2 + 1))  # +1 avoids writing over board outline
+        othello.pendown()
+        othello.color("white", "white")
+        othello.setheading(0)
+        othello.begin_fill()
+        # For each half
+        for _ in range(2):
+            othello.forward(2 * SQUARE)
+            othello.left(90)
+            othello.forward(SQUARE//2 - 1)
+            othello.left(90)
+        othello.end_fill()
+
+        # Display the text
+        othello.penup()
+        othello.goto(0, self.size // 2)
+        othello.color("black")
+        othello.pendown()
+        othello.write(message, align="center", font=("Georgia"))
     
     ## SIGNATURE
     # draw_box :: Object => Void
@@ -284,32 +321,13 @@ class GameBoard:
         # Draw
         othello.color("white", "#202020")
         othello.begin_fill()
-        for half in range(2):
+        # For each half
+        for _ in range(2):
             othello.forward(width)
             othello.left(90)
             othello.forward(height)
             othello.left(90)
         othello.end_fill()
-
-    ## SIGNATURE
-    # choose_move :: Object => Integer
-    def choose_move(self):
-        '''
-        This function is used by the computer player to decide what move to 
-        make. It searches for the valid move that will capture the most tiles.
-        Returns an integer representing the location of a square, or -1 if
-        no valid move exists.
-        '''
-        keys = self.valid_moves.keys()
-
-        key = -1
-        length = 0
-        for k in keys:
-            l = len(self.valid_moves[k])
-            if l > length:
-                length = l
-                key = k
-        return key
 
     ## SIGNATURE
     # find_valid_moves :: Object => {Integer: Integer[]}
@@ -571,6 +589,89 @@ class GameBoard:
             self.white -= 1
 
     ## SIGNATURE
+    # choose_move :: Object => Integer
+    def choose_move(self):
+        '''
+        This function is used by the computer player to decide what move to 
+        make. It searches for the valid move that will capture the most tiles.
+        Returns an integer representing the location of a square, or -1 if
+        no valid move exists.
+        '''
+        keys = self.valid_moves.keys()
+
+        key = -1
+        length = 0
+        for k in keys:
+            l = len(self.valid_moves[k])
+            if l > length:
+                length = l
+                key = k
+        return key
+
+    ## SIGNATURE
+    # computer_move :: Object => Boolean
+    def computer_move(self):
+        '''
+        Contains the logic for the computer player's move during a game.
+        Returns True if a move was made, or False if there were no legal moves.
+        '''
+        # Choose a move if possible
+        choice = self.choose_move()
+        if choice != -1:
+            # There was a move, so draw tile and update game state for user
+            self.make_move(choice)
+
+            # If the user has no moves, go again
+            if len(self.valid_moves) == 0:
+                self.switch_turns()
+                self.valid_moves = self.find_valid_moves()
+                self.announce_turn()
+                return self.computer_move()
+            
+            return True
+        
+        # If there are no valid moves, return control back to play
+        # and switch to the user's turn.
+        else:
+            self.switch_turns()
+            self.valid_moves = self.find_valid_moves()
+            self.announce_turn()
+            return False
+    
+    ## SIGNATURE
+    # make_move :: (Object, Integer) => Void
+    def make_move(self, location):
+        '''
+        Executes the actions necessary to make a move after choice of tile
+        location has been made.
+        int location -- The index location of the tile to be placed.
+        '''
+        assert type(location) == int and 0 <= location < self.n**2,\
+            "location must be a valid board index"
+
+        # Draw a tile
+        self.place(location)
+
+        # Flip captured tiles
+        to_flip = self.valid_moves[location]
+        self.flip_tiles(to_flip)
+
+        # Determine valid moves for next player
+        self.switch_turns()
+        self.valid_moves = self.find_valid_moves()
+        self.announce_turn()
+
+    ## SIGNATURE
+    # end_game :: Object => Void
+    def end_game(self):
+        '''
+        Announces a winner and save's user's name in a high scores file.
+        '''
+        self.announce_winner()
+        name = window.textinput("Name", "Enter your name to save your score:")
+        # TODO: incorporate file saving
+
+    ## SIGNATURE
     # play :: (Object, Integer, Integer) => Void
     def play(self, x, y):
         '''
@@ -581,27 +682,38 @@ class GameBoard:
         int x -- The mouse x position
         int y -- The mouse y position 
         '''
-        # Get legal moves
+        # Temporarily disable further clicks
+        window.onclick(None)
+
+        # Get legal move locations
         legal = self.valid_moves.keys()
-
+        # Execute move
         for square in self.squares:
-            if square.was_clicked(x, y) and square.location in legal:
-                # Draw a tile
-                self.place(square.location)
-
-                # Flip captured tiles
-                to_flip = self.valid_moves[square.location]
-                self.flip_tiles(to_flip)
-                self.switch_turns()
+            # Search each square on the board for a click and make a play
+            # where there was one, or do nothing if no valid tile was clicked.
+            if square.was_clicked(x, y) and (square.location in legal):
+                self.make_move(square.location)
                 break
         
-        # Get new valid moves
-        self.valid_moves = self.find_valid_moves()
+        # If the user made a valid move, the computer can go.
+        # This condition will always be true at least once, after the first
+        # legal move of the game.
+        if self.turn == "white":
+            
+            # True if the computer made a move, False otherwise
+            comp_moved = self.computer_move()
 
-        # When the board is full, announce a winner and finish the game
-        if self.is_full():
-            self.announce_winner()
-
+            # If the user has no moves after the computer goes,
+            # the computer will recursively continue to play until
+            # either the user has a move or neither have a move.
+            # If the computer made all of the moves that it could 
+            # (including none), and the user still cannot go, the 
+            # game is over.
+            if not comp_moved and len(self.valid_moves) == 0:
+                self.end_game()
+        
+        # Reactivate clicks
+        window.onclick(self.play)
 
 
 class Square:
@@ -618,7 +730,8 @@ class Square:
         Attributes representing the length of a side (size) and the center
         coordinates (center) of the square are also initialized.
         '''
-        assert type(location) == int and location >= 0, "location must be a non-negative integer"
+        assert type(location) == int and location >= 0, \
+            "location must be a non-negative integer"
         assert type(x) == int and type(y) == int, "x & y must be integers"
         self.location = location
         self.x = x
@@ -669,7 +782,6 @@ class Square:
         return False
 
 
-
 class GamePiece:
     '''
     GamePiece represents a single piece, or tile, in Othello.
@@ -683,11 +795,11 @@ class GamePiece:
         int center_y -- The y-coordinate of the piece's center.
         '''
         assert type(location) == int and location >= 0,\
-        "location must be a non-negative integer"
+            "location must be a non-negative integer"
         assert color == "black" or color == "white",\
-        "color must be 'black' or 'white'"
+            "color must be 'black' or 'white'"
         assert type(center_x) == int and type(center_y) == int,\
-        "x & y values must be integers"
+            "x & y values must be integers"
 
         self.location = location
         self.color = color
@@ -732,12 +844,14 @@ class GamePiece:
     ## SIGNATURE
     # __repr__ :: Object => String
     def __repr__(self):
+        '''
+        A string representation of this object. Made to help in debugging.
+        '''
         return self.color + " @ " + str(self.location)
-
 
 
 #### Game play ####
 if __name__ == "__main__":
-    board = GameBoard(8)
+    board = GameBoard(6)
     turtle.done()
     
