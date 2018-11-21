@@ -1,45 +1,48 @@
 '''
-The othello module is used to play the game Othello. It is the final 
-project for CS5001 at Northeastern University.
+The othello module is used to play the board game Othello, also known as Reversi. 
+It is the final project for CS5001 at Northeastern University. To play, simply run the 
+file.
 
 Author: Evan Douglass
 '''
 import turtle
 
-#### Module constants and global variables ###
-SQUARE = 50             # pixels
-RADIUS = SQUARE - 10    # pixels
-SCORES = "./scores.txt"
+#### Module constants and global variables ####
+SQUARE = 50                 # pixels - The size of one square on the board.
+DIAMETER = SQUARE - 10      # pixels - The diameter of a single tile.
+SCORES = "./scores.txt"     # A file to track player scores.
 
-window = turtle.Screen()
-othello = turtle.Turtle()
+window = turtle.Screen()    # Graphics window
+othello = turtle.Turtle()   # A pen to draw in the window
 
 #### Classes ####
 class GameBoard:
     '''
     The GameBoard class represents a board for the game Othello. It also 
-    contains the functionality and logic allowing for gameplay.
+    contains the functionality and logic allowing for gameplay, including
+    a simple computer player AI.
     '''
 
+    ## SIGNATURE
+    # __init__ :: (Object, Integer) => Void
     def __init__(self, n):
         '''
         Draws the starting board and sets up gameplay.
         int n -- The number of squares on one side of the board (it's length
-        in squares).
+            in squares).
         '''
         assert type(n) == int, "n must be an integer."
         assert n >= 4, "n must be greater than or equal to 4."
         assert n % 2 != 1, "n must be even."
+        
         self.n = n
-
-        self.size = SQUARE * n
+        self.size = SQUARE * n      # The size of one side of the board in pixels
         self.turn = "black"         # The user will go first and is assigned the black pieces
 
         # Game state tracking attributes
         self.pieces = [None for location in range(n*n)]
         self.black = 0
         self.white = 0
-        self.turns_no_moves = 0
         start = -n * SQUARE // 2     # The x & y coordinate of the first square
         self.squares = self.init_squares(start)
 
@@ -59,128 +62,126 @@ class GameBoard:
         window.onclick(self.play)
 
     ## SIGNATURE
-    # init_squares :: (Object, Integer) => Object
-    def init_squares(self, corner):
+    # play :: (Object, Integer, Integer) => Void
+    def play(self, x, y):
         '''
-        Populates the self.squares list.
-        int corner -- A number representing the x & y coordinate of the 
-        first square.
-        Returns a list of Square objects
+        This method drives the game. It waits for a user's mouse click to occur and 
+        if the click is in a valid location, it places a black tile in that square.
+        Before terminating, it also drives the computer's turn and checks if the
+        game is over.
+        int x -- The mouse x position
+        int y -- The mouse y position 
         '''
-        corner = int(corner)
-        lst = []
-        index = 0
-        # y-coordinates can continuously increase
-        y_corner = corner
-        # For each row (using _ because I was getting warnings of unused variable)
-        for _ in range(self.n):         
-            # x-coordinate values need to start over on each row
-            x_corner = corner
-            # For each column
-            for _ in range(self.n):
-                # Add a square to the tracker list and increment values
-                lst.append(Square(index, x_corner, y_corner))
-                index += 1
-                x_corner += SQUARE
-            y_corner += SQUARE
+        # Temporarily disable further clicks
+        window.onclick(None)
+
+        ended_early = False
+
+        # Get legal move locations
+        legal = self.valid_moves.keys()
+        # Execute move
+        for square in self.squares:
+            # Search each square on the board for a click and make a play
+            # where there was one, or do nothing if no valid tile was clicked.
+            if square.was_clicked(x, y) and (square.location in legal):
+                self.make_move(square.location)
+                break
         
-        return lst
-
-    ## SIGNATURE
-    # draw_board :: Object => Void
-    def draw_board(self):
-        '''
-        Draws an nxn board with a green background.
-        '''
-        # Setup window
-        window.setup(self.size + SQUARE, self.size + SQUARE)
-        window.screensize(self.size, self.size)
-        window.bgcolor("white")
-        window.title("Othello")
-
-        # Create turtle to draw the board
-        othello.penup()
-        othello.speed(0)
-        othello.hideturtle()
-
-        # Line color is black, fill color is green
-        othello.color("black", "forest green")
-
-        # Move the turtle to the lower left corner
-        corner = -self.n * SQUARE // 2
-        othello.setposition(corner, corner)
-
-        # Draw the green background
-        othello.begin_fill()
-        for i in range(4):
-            othello.pendown()
-            othello.forward(SQUARE * self.n)
-            othello.left(90)
-        othello.end_fill()
-
-        # Draw the horizontal lines
-        for i in range(self.n + 1):
-            othello.setposition(corner, SQUARE * i + corner)
-            self.draw_line()
-
-        # Draw the vertical lines
-        othello.left(90)
-        for i in range(self.n + 1):
-            othello.setposition(SQUARE * i + corner, corner)
-            self.draw_line()
-
-    ## SIGNATURE
-    # draw_line :: Object => Void
-    def draw_line(self):
-        '''
-        Draws a line. this is a helper function for draw_board.
-        '''
-        othello.pendown()
-        othello.forward(SQUARE * self.n)
-        othello.penup()
-
-    ## SIGNATURE
-    # draw_start_tiles :: Object => Void
-    def draw_start_tiles(self):
-        '''
-        Draws the four starting tiles on the board.
-        '''
-        start_tiles = self.find_center_squares()
-        for location in start_tiles:
-            self.place(location)
-            self.switch_turns()
-
-    ## SIGNATURE
-    # switch_turns :: Object => Void
-    def switch_turns(self):
-        '''
-        Changes the turn from black to white or white to black.
-        '''
+        # If the user made a valid move, the computer can go.
+        # This condition will always be true at least once, after the first
+        # legal move of the game.
         if self.turn == "white":
-            self.turn = "black"
-        elif self.turn == "black":
-            self.turn = "white"
+            
+            # True if the computer made a move, False otherwise
+            comp_moved = self.computer_move()
+
+            # If the user has no moves after the computer goes,
+            # the computer will recursively continue to play until
+            # either the user has a move or neither have a move.
+            # If the computer made all of the moves that it could 
+            # (including none), and the user still cannot go, the 
+            # game is over.
+            if not comp_moved and len(self.valid_moves) == 0:
+                self.end_game()
+                ended_early = True
+        
+        # TODO: Test if this works best above the conditional. Do same with computer moves
+        # The final test is used for games that end with a full board.
+        # This avoids the problem of seeing the turn switch back and
+        # forth several times when it is obvious already that the game
+        # is over.
+        if board.is_full() and not ended_early:
+            self.end_game()
+        
+        # Reactivate clicks
+        window.onclick(self.play)
 
     ## SIGNATURE
-    # find_center_squares :: Object => Integer[]
-    def find_center_squares(self):
+    # make_move :: (Object, Integer) => Void
+    def make_move(self, location):
         '''
-        Finds the four center starting squares on the board.
-        Returns a tuple of ints representing the indexes of the four center 
-        squares on the draw_board.
+        Executes the actions necessary to make a move after choice of tile
+        location has been made.
+        int location -- The index location of the tile to be placed.
         '''
-        # If n is even and the board grid is indexed from 0 to n*n
-        # then the upper right center square can be found with the formula:
-        # 0.5(n**2 + n)
-        # The remaining squares can be found by subtracting from that result
-        # 1, n, n+1 for upper left, lower right, and lower left respectively
-        ur = int(0.5 * (self.n**2 + self.n))
-        ul = ur - 1
-        lr = ur - self.n
-        ll = lr - 1
-        # Positioned in an order to make drawing the start pieces simpler
-        # see draw_start_tiles
-        return (ul, ur, lr, ll)
+        assert type(location) == int and 0 <= location < self.n**2,\
+            "location must be a valid board index"
+
+        # Draw a tile
+        self.place(location)
+
+        # Flip captured tiles
+        to_flip = self.valid_moves[location]
+        self.flip_tiles(to_flip)
+
+        # Determine valid moves for next player
+        self.switch_turns()
+        self.valid_moves = self.find_valid_moves()
+        self.announce_turn()
+    
+    ## SIGNATURE
+    # computer_move :: Object => Boolean
+    def computer_move(self):
+        '''
+        Contains the logic for the computer player's move during a game.
+        Returns True if a move was made, or False if there were no legal moves.
+        '''
+        # Choose a move if possible
+        choice = self.choose_move()
+        if choice != -1:
+            # There was a move, so draw tile and update game state for user
+            self.make_move(choice)
+
+            # TODO: if board is full, end game?
+
+            # If the user has no moves, go again
+            if len(self.valid_moves) == 0:
+                self.switch_turns()
+                self.valid_moves = self.find_valid_moves()
+                self.announce_turn()
+                return self.computer_move()
+            
+            return True
+
+    ## SIGNATURE
+    # choose_move :: Object => Integer
+    def choose_move(self):
+        '''
+        This function is used by the computer player to decide what move to 
+        make. It searches for the valid move that will capture the most tiles.
+        Returns an integer representing the location of a square, or -1 if
+        no valid move exists.
+        '''
+        keys = self.valid_moves.keys()
+
+        key = -1
+        length = 0
+        for k in keys:
+            l = len(self.valid_moves[k])
+            if l > length:
+                length = l
+                key = k
+        return key
     
     ## SIGNATURE
     # place :: (Object, Integer, String) => Void
@@ -207,127 +208,6 @@ class GameBoard:
             self.white += 1
         elif self.turn == "black":
             self.black += 1
-
-    ## SIGNATURE
-    # is_full :: Object => Boolean
-    def is_full(self):
-        '''
-        Tests whether the board is full of tiles or not.
-        Returns a boolean value.
-        '''
-        full = True
-        for tile in self.pieces:
-            # if any tile == None, the board is not full
-            if tile == None:
-                full = False
-                break
-        return full
-    
-    ## SIGNATURE
-    # find_winner :: Object => (String, String)
-    def find_winner(self):
-        '''
-        Calculates the winner based on the number of black and white tiles
-        on the board.
-        Returns two strings, the first announces the winner, the second 
-        describes the score.
-        '''
-        # Determine message to display
-        if self.white > self.black:
-            message = "White wins!"
-        elif self.black > self.white:
-            message = "Black wins!"
-        else:
-            message = "You tied!"
-        
-        score = "black: " + str(self.black) + ", white: " + str(self.white)
-
-        return message, score
-
-    ## SIGNATURE
-    # announce_winner :: Object => Void
-    def announce_winner(self):
-        '''
-        Determines and announces the winner of the current game to the user.
-        '''
-        message, score = self.find_winner()
-
-        # Display textbox
-        self.draw_box()
-        
-        # Display message
-        othello.penup()
-        othello.home()
-        othello.color("white")
-        othello.pendown()
-        othello.write(message, align="center", font=("Georgia", 25, "bold", "underline"))
-        print(message)
-
-        # Display score
-        othello.penup()
-        othello.goto(0, -SQUARE//2)
-        othello.pendown()
-        othello.write(score, align="center", font=("Georgia", 16, "bold"))
-        print(score)
-
-    ## SIGNATURE
-    # announce_turn :: Object => Void
-    def announce_turn(self):
-        '''
-        Displays whose turn it is at the top of the board.
-        '''
-        message = self.turn + "'s turn"
-
-        # Draw white box around old text
-        othello.penup()
-        othello.goto(-SQUARE, (self.size//2 + 1))  # +1 avoids writing over board outline
-        othello.pendown()
-        othello.color("white", "white")
-        othello.setheading(0)
-        othello.begin_fill()
-        # For each half
-        for _ in range(2):
-            othello.forward(2 * SQUARE)
-            othello.left(90)
-            othello.forward(SQUARE//2 - 1)
-            othello.left(90)
-        othello.end_fill()
-
-        # Display the text
-        othello.penup()
-        othello.goto(0, self.size // 2)
-        othello.color("black")
-        othello.pendown()
-        othello.write(message, align="center", font=("Georgia"))
-    
-    ## SIGNATURE
-    # draw_box :: Object => Void
-    def draw_box(self):
-        '''
-        Draws a black box used to display the end-of-game text.
-        '''
-        # Box will cover the middle two rows across the whole window
-        start_x = -self.size//2 - SQUARE//2
-        start_y = -SQUARE
-        width = self.size + SQUARE
-        height = 2 * SQUARE
-
-        # Set start
-        othello.penup()
-        othello.goto(start_x, start_y)
-        othello.setheading(0)           # Move to the right first
-        othello.pendown()
-
-        # Draw
-        othello.color("white", "#202020")
-        othello.begin_fill()
-        # For each half
-        for _ in range(2):
-            othello.forward(width)
-            othello.left(90)
-            othello.forward(height)
-            othello.left(90)
-        othello.end_fill()
 
     ## SIGNATURE
     # find_valid_moves :: Object => {Integer: Integer[]}
@@ -587,50 +467,6 @@ class GameBoard:
         elif color == "black":
             self.black += 1
             self.white -= 1
-
-    ## SIGNATURE
-    # choose_move :: Object => Integer
-    def choose_move(self):
-        '''
-        This function is used by the computer player to decide what move to 
-        make. It searches for the valid move that will capture the most tiles.
-        Returns an integer representing the location of a square, or -1 if
-        no valid move exists.
-        '''
-        keys = self.valid_moves.keys()
-
-        key = -1
-        length = 0
-        for k in keys:
-            l = len(self.valid_moves[k])
-            if l > length:
-                length = l
-                key = k
-        return key
-
-    ## SIGNATURE
-    # computer_move :: Object => Boolean
-    def computer_move(self):
-        '''
-        Contains the logic for the computer player's move during a game.
-        Returns True if a move was made, or False if there were no legal moves.
-        '''
-        # Choose a move if possible
-        choice = self.choose_move()
-        if choice != -1:
-            # There was a move, so draw tile and update game state for user
-            self.make_move(choice)
-
-            # TODO: if board is full, end game?
-
-            # If the user has no moves, go again
-            if len(self.valid_moves) == 0:
-                self.switch_turns()
-                self.valid_moves = self.find_valid_moves()
-                self.announce_turn()
-                return self.computer_move()
-            
-            return True
         
         # If there are no valid moves, return control back to play
         # and switch to the user's turn.
@@ -639,29 +475,74 @@ class GameBoard:
             self.valid_moves = self.find_valid_moves()
             self.announce_turn()
             return False
+
+    ## SIGNATURE
+    # is_full :: Object => Boolean
+    def is_full(self):
+        '''
+        Tests whether the board is full of tiles or not.
+        Returns a boolean value.
+        '''
+        full = True
+        for tile in self.pieces:
+            # if any tile == None, the board is not full
+            if tile == None:
+                full = False
+                break
+        return full
     
     ## SIGNATURE
-    # make_move :: (Object, Integer) => Void
-    def make_move(self, location):
+    # find_winner :: Object => (String, String)
+    def find_winner(self):
         '''
-        Executes the actions necessary to make a move after choice of tile
-        location has been made.
-        int location -- The index location of the tile to be placed.
+        Calculates the winner based on the number of black and white tiles
+        on the board.
+        Returns two strings, the first announces the winner, the second 
+        describes the score.
         '''
-        assert type(location) == int and 0 <= location < self.n**2,\
-            "location must be a valid board index"
+        # Determine message to display
+        if self.white > self.black:
+            message = "White wins!"
+        elif self.black > self.white:
+            message = "Black wins!"
+        else:
+            message = "You tied!"
+        
+        score = "black: " + str(self.black) + ", white: " + str(self.white)
 
-        # Draw a tile
-        self.place(location)
+        return message, score
 
-        # Flip captured tiles
-        to_flip = self.valid_moves[location]
-        self.flip_tiles(to_flip)
-
-        # Determine valid moves for next player
-        self.switch_turns()
-        self.valid_moves = self.find_valid_moves()
-        self.announce_turn()
+    ## SIGNATURE
+    # find_center_squares :: Object => Integer[]
+    def find_center_squares(self):
+        '''
+        Finds the four center starting squares on the board.
+        Returns a tuple of ints representing the indexes of the four center 
+        squares on the draw_board.
+        '''
+        # If n is even and the board grid is indexed from 0 to n*n
+        # then the upper right center square can be found with the formula:
+        # 0.5(n**2 + n)
+        # The remaining squares can be found by subtracting from that result
+        # 1, n, n+1 for upper left, lower right, and lower left respectively
+        ur = int(0.5 * (self.n**2 + self.n))
+        ul = ur - 1
+        lr = ur - self.n
+        ll = lr - 1
+        # Positioned in an order to make drawing the start pieces simpler
+        # see draw_start_tiles
+        return (ul, ur, lr, ll)
+    
+    ## SIGNATURE
+    # switch_turns :: Object => Void
+    def switch_turns(self):
+        '''
+        Changes the turn from black to white or white to black.
+        '''
+        if self.turn == "white":
+            self.turn = "black"
+        elif self.turn == "black":
+            self.turn = "white"
 
     ## SIGNATURE
     # end_game :: Object => Void
@@ -717,60 +598,184 @@ class GameBoard:
             scores.write(name + " " + str(self.black) + "\n")
             scores.close()
 
+    ## SIGNATURE
+    # init_squares :: (Object, Integer) => Object
+    def init_squares(self, corner):
+        '''
+        Populates the self.squares list.
+        int corner -- A number representing the x & y coordinate of the 
+            first square.
+        Returns a list of Square objects
+        '''
+        assert type(corner) == int, "corner must be an integer"
+
+        lst = []
+        index = 0
+        # y-coordinates can continuously increase
+        y_corner = corner
+        # For each row (using _ because I was getting warnings of unused variable)
+        for _ in range(self.n):         
+            # x-coordinate values need to start over on each row
+            x_corner = corner
+            # For each column
+            for _ in range(self.n):
+                # Add a square to the tracker list and increment values
+                lst.append(Square(index, x_corner, y_corner))
+                index += 1
+                x_corner += SQUARE
+            y_corner += SQUARE
+        
+        return lst
 
     ## SIGNATURE
-    # play :: (Object, Integer, Integer) => Void
-    def play(self, x, y):
+    # announce_winner :: Object => Void
+    def announce_winner(self):
         '''
-        This mehtod drives the game. It waits for a mouse click to occur and 
-        if the click is in a valid location it places a tile of color 
-        self.turn in that square. If the board is full, it announces a winner 
-        and terminates, thus stopping the game.
-        int x -- The mouse x position
-        int y -- The mouse y position 
+        Determines and announces the winner of the current game to the user.
         '''
-        # Temporarily disable further clicks
-        window.onclick(None)
+        message, score = self.find_winner()
 
-        ended_early = False
+        # Display textbox
+        self.draw_box()
+        
+        # Display message
+        othello.penup()
+        othello.home()
+        othello.color("white")
+        othello.pendown()
+        othello.write(message, align="center", font=("Georgia", 25, "bold", "underline"))
+        print(message)
 
-        # Get legal move locations
-        legal = self.valid_moves.keys()
-        # Execute move
-        for square in self.squares:
-            # Search each square on the board for a click and make a play
-            # where there was one, or do nothing if no valid tile was clicked.
-            if square.was_clicked(x, y) and (square.location in legal):
-                self.make_move(square.location)
-                break
-        
-        # If the user made a valid move, the computer can go.
-        # This condition will always be true at least once, after the first
-        # legal move of the game.
-        if self.turn == "white":
-            
-            # True if the computer made a move, False otherwise
-            comp_moved = self.computer_move()
+        # Display score
+        othello.penup()
+        othello.goto(0, -SQUARE//2)
+        othello.pendown()
+        othello.write(score, align="center", font=("Georgia", 16, "bold"))
+        print(score)
 
-            # If the user has no moves after the computer goes,
-            # the computer will recursively continue to play until
-            # either the user has a move or neither have a move.
-            # If the computer made all of the moves that it could 
-            # (including none), and the user still cannot go, the 
-            # game is over.
-            if not comp_moved and len(self.valid_moves) == 0:
-                self.end_game()
-                ended_early = True
-        
-        # The final test is used for games that end with a full board.
-        # This avoids the problem of seeing the turn switch back and
-        # forth several times when it is obvious already that the game
-        # is over.
-        if board.is_full() and not ended_early:
-            self.end_game()
-        
-        # Reactivate clicks
-        window.onclick(self.play)
+    ## SIGNATURE
+    # announce_turn :: Object => Void
+    def announce_turn(self):
+        '''
+        Displays whose turn it is at the top of the board.
+        '''
+        message = self.turn + "'s turn"
+
+        # Draw white box around old text
+        othello.penup()
+        othello.goto(-SQUARE, (self.size//2 + 1))  # +1 avoids writing over board outline
+        othello.pendown()
+        othello.color("white", "white")
+        othello.setheading(0)
+        othello.begin_fill()
+        # For each half
+        for _ in range(2):
+            othello.forward(2 * SQUARE)
+            othello.left(90)
+            othello.forward(SQUARE//2 - 1)
+            othello.left(90)
+        othello.end_fill()
+
+        # Display the text
+        othello.penup()
+        othello.goto(0, self.size // 2)
+        othello.color("black")
+        othello.pendown()
+        othello.write(message, align="center", font=("Georgia"))
+    
+    ## SIGNATURE
+    # draw_box :: Object => Void
+    def draw_box(self):
+        '''
+        Draws a black box used to display the end-of-game text.
+        '''
+        # Box will cover the middle two rows across the whole window
+        start_x = -self.size//2 - SQUARE//2
+        start_y = -SQUARE
+        width = self.size + SQUARE
+        height = 2 * SQUARE
+
+        # Set start
+        othello.penup()
+        othello.goto(start_x, start_y)
+        othello.setheading(0)           # Move to the right first
+        othello.pendown()
+
+        # Draw
+        othello.color("white", "#202020")
+        othello.begin_fill()
+        # For each half
+        for _ in range(2):
+            othello.forward(width)
+            othello.left(90)
+            othello.forward(height)
+            othello.left(90)
+        othello.end_fill()
+
+    ## SIGNATURE
+    # draw_board :: Object => Void
+    def draw_board(self):
+        '''
+        Draws an nxn board with a green background.
+        '''
+        # Setup window
+        window.setup(self.size + SQUARE, self.size + SQUARE)
+        window.screensize(self.size, self.size)
+        window.bgcolor("white")
+        window.title("Othello")
+
+        # Create turtle to draw the board
+        othello.penup()
+        othello.speed(0)
+        othello.hideturtle()
+
+        # Line color is black, fill color is green
+        othello.color("black", "forest green")
+
+        # Move the turtle to the lower left corner
+        corner = -self.n * SQUARE // 2
+        othello.setposition(corner, corner)
+
+        # Draw the green background
+        othello.begin_fill()
+        for i in range(4):
+            othello.pendown()
+            othello.forward(SQUARE * self.n)
+            othello.left(90)
+        othello.end_fill()
+
+        # Draw the horizontal lines
+        for i in range(self.n + 1):
+            othello.setposition(corner, SQUARE * i + corner)
+            self.draw_line()
+
+        # Draw the vertical lines
+        othello.left(90)
+        for i in range(self.n + 1):
+            othello.setposition(SQUARE * i + corner, corner)
+            self.draw_line()
+
+    ## SIGNATURE
+    # draw_line :: Object => Void
+    def draw_line(self):
+        '''
+        Draws a line. this is a helper function for draw_board.
+        '''
+        othello.pendown()
+        othello.forward(SQUARE * self.n)
+        othello.penup()
+
+    ## SIGNATURE
+    # draw_start_tiles :: Object => Void
+    def draw_start_tiles(self):
+        '''
+        Draws the four starting tiles on the board.
+        '''
+        start_tiles = self.find_center_squares()
+        for location in start_tiles:
+            self.place(location)
+            self.switch_turns()
+
 
 
 class Square:
@@ -873,7 +878,7 @@ class GamePiece:
         othello.penup()
         othello.goto(self.x, self.y)
         othello.pendown()
-        othello.dot(RADIUS, self.color)
+        othello.dot(DIAMETER, self.color)
 
     ## SIGNATURE
     # change_color :: Object => Void
@@ -909,5 +914,5 @@ class GamePiece:
 
 #### Game play ####
 if __name__ == "__main__":
-    board = GameBoard(6)
+    board = GameBoard(8)
     turtle.done()

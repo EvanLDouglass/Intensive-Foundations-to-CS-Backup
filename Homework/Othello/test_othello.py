@@ -129,6 +129,17 @@ def test_init():
 def test_init_squares():
     # This function also indirectly tests the Squares.__init__ method
 
+    # Test invalid values first
+    with pt.raises(AssertionError) as string:
+        four.init_squares("Hello")
+    with pt.raises(AssertionError) as lst:
+        four.init_squares(["h", 3, 6.8])
+    with pt.raises(AssertionError) as flt:
+        four.init_squares(4.5)
+    assert "corner must be an integer" in str(string.value)
+    assert "corner must be an integer" in str(lst.value)
+    assert "corner must be an integer" in str(flt.value)
+
     # Function for testing squares' index values
     def squares_are_correct_index_values(board_object):
         # Squares have location value according to their place on the board,

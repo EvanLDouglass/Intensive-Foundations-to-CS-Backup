@@ -1,0 +1,57 @@
+CS 5001
+Othello: AI Write-up
+Evan Douglass
+
+Question 1:
+Did you attempt to make your computer player very smart -- i.e., do something 
+more clever than just pick a random legal move?
+Answer:
+    I did attempt to make my computer player clever. See the following questions 
+for details.
+
+Question 2:
+If so, were you able to accomplish this? Is your computer player as smart as 
+you would like?
+Answer:
+    I was able to make my computer player fairly clever. Instead of picking random moves,
+my player picked whichever legal move captured the most opponent tiles, or the
+first move found if there is a tie.
+    This proved to be quite effective; during testing the computer beat me more
+times than I beat it. However, it is not as smart as I would like, ideally.
+Ideally, I would implement a machine learning model and the computer would learn
+human-like strategy, essentially thinking ahead and anticipating opponent moves.
+For example, I learned it can be valuable to capture the corners of the board 
+before my opponent. My computer player will only take the corner if it gets more
+tiles flipped than any other possible move.
+
+Question 3:
+How did you determine which piece to play next?  Tell us about your “pick next 
+move” algorithm.
+Answer:
+    One of the main data structures in my GameBoard class is the valid_moves
+dictionary. This stores the index location of squares that are valid moves as keys and
+a list of the index locations of tiles that can be flipped from that square as values.
+After each move, either user or computer, the dictionary is updated. So, at the 
+start of the computer's turn, it looks through each valid move and determines 
+which one will capture the most tiles by comparing the length of each value list.
+Whichever key is associated with the longest list is the square where the computer
+places its tile.
+    The dictionary is updated by iterating through each square and determining 
+which opponent tiles can be captured from that spot, if any.
+
+Question 4:
+How often did your computer program beat you, or your friends, or whoever 
+tested it out for you?
+Answer:
+    As mentioned above, the computer beats me fairly often. If I'm being 
+carless about where I put my tiles, the computer beats me every time. If I 
+carefully and strategically choose my moves then I can usually beat the computer.
+Once, I was able to cover a 6x6 board in only black tiles. However, even when
+I am trying to win, the computer still beats me every now and then.
+
+Question 5:
+How would you improve it in the future? 
+Answer:
+    I think the best way to improve it in the future is to give it some 
+machine learning capabilities. As mentioned above, this would help give it
+a sense of strategy beyond just the current move.
