@@ -2,7 +2,7 @@
 This is a test module for the Othello program. It removes the automatic graphic
 components so unit testing is more easily accomplished.
 
-It recommend commenting out the global window and othello variables
+I recommend commenting out the global window and othello variables
 in othello.py before running tests in order to prevent a graphics window 
 from popping up.
 
