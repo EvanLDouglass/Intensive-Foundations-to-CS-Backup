@@ -292,7 +292,6 @@ class GameBoard:
         end = self.set_max_min(location, direction)
 
         # Ensure the stop in range includes end
-        # FIXME: Can this be eliminated with updates to set_max_min? 
         if inc <= 0:
             end -= 1
         else:
