@@ -49,7 +49,7 @@ class GameBoard:
         # Draw the empty board
         self.draw_board()
 
-        # Draw the starting tiles
+        # Draw the starting tiles 
         self.draw_start_tiles()
 
         # Display turn
